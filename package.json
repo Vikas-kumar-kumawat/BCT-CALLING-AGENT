@@ -1,0 +1,14 @@
+{
+  "name": "bct-calling-agent",
+  "version": "1.0.0",
+  "description": "BCT Voice AI Calling Agent - Fullstack Application",
+  "main": "Backend/server.js",
+  "scripts": {
+    "postinstall": "npm install --prefix Backend && npm install --prefix Frontend",
+    "build": "npm run build --prefix Frontend",
+    "start": "node Backend/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

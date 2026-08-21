@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-[#08090a] text-zinc-100 font-sans antialiased selection:bg-zinc-800 selection:text-white;
+  }
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #08090a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e2026;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2b2e38;
+}
