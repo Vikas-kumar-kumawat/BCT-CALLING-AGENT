@@ -1,96 +1,56 @@
-const { formatPhoneNumber } = require('../utils/formatPhone')
-const { makeSipCall } = require('../services/sipService')
+const { makeSipCall }  = require('../services/sipService')
+const { getLocalAudio } = require('../services/audioService')
+const { streamAudio }   = require('../services/rtpService')
 
 let conversationLogs = []
 
-
-
-
-
-
-
-
-
-
 async function startCall(req, res) {
-
-
-
-
-
   const { name = 'Customer', phone } = req.body || {}
   if (!phone) return res.status(400).json({ success: false, message: 'Phone number is required' })
-  // Use raw phone string for SIP since PBXs often reject '+' prefixes
+
   const formattedPhone = phone.replace(/[^\d]/g, '')
-  const audioUrl = 'https://files.catbox.moe/wjlx8c.mp3'
-  const agentGreeting = 'नमस्ते सर, मैं बीफाइबनेट से बात कर रही हूँ, फीडबैक के रिगार्डिंग कॉल था। आपका इंटरनेट कैसा चल रहा है?'
-
-
   console.log(`[Feedback Call] Target: ${formattedPhone}`)
-
-
 
   conversationLogs = [{
     id: Date.now(),
     sender: 'agent',
     speaker: 'Voice Agent',
-    text: agentGreeting,
+    text: 'Welcome to BFibernet! Calling customer with feedback greeting.',
     timestamp: new Date().toLocaleTimeString()
   }]
 
-
-
   try {
-    await makeSipCall(formattedPhone)
+    // Wait for call to be answered (200 OK)
+    const { rtpIp, rtpPort, socket } = await makeSipCall(formattedPhone)
+
+    // Respond to HTTP immediately after call is connected
     res.json({
       success: true,
-      isSimulated: false,
-      message: `SIP call initiated to ${name} (${formattedPhone})`,
-      audioUrl,
+      message: `Call connected to ${name} (${formattedPhone}) — playing greeting`,
       logs: conversationLogs
     })
+
+    // Convert audio23.mp3 → u-law and stream over RTP
+    const ulaw = await getLocalAudio('audio23.mp3')
+    await streamAudio(ulaw, rtpIp, rtpPort, socket)
+
   } catch (err) {
-    console.error('[SIP Call Error]', err)
-    res.status(500).json({ success: false, message: err.message, logs: conversationLogs })
+    console.error('[Call Error]', err.message)
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: err.message, logs: conversationLogs })
+    }
   }
-
-
-
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 async function cancelCall(req, res) {
   conversationLogs.push({
     id: Date.now(),
     sender: 'agent',
     speaker: 'System',
-    text: 'Call ended / cancelled by agent.',
+    text: 'Call ended by agent.',
     timestamp: new Date().toLocaleTimeString()
   })
-  res.json({ success: true, message: 'Call cancelled successfully', logs: conversationLogs })
+  res.json({ success: true, message: 'Call cancelled', logs: conversationLogs })
 }
 
 function getLogs(req, res) {

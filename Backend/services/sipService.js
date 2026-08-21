@@ -1,6 +1,6 @@
 /**
  * sipService.js - Raw UDP SIP client with rport NAT traversal
- * Uses built-in dgram + crypto only. No external sip library.
+ * Returns { rtpIp, rtpPort, socket } when call is answered (200 OK)
  */
 const dgram = require('dgram');
 const crypto = require('crypto');
@@ -21,7 +21,6 @@ function getLocalIp() {
   return '127.0.0.1';
 }
 
-// Build a raw SIP message string
 function buildSip(method, reqUri, headers, body = '') {
   let msg = `${method} ${reqUri} SIP/2.0\r\n`;
   for (const [k, v] of Object.entries(headers)) msg += `${k}: ${v}\r\n`;
@@ -29,96 +28,102 @@ function buildSip(method, reqUri, headers, body = '') {
   return msg;
 }
 
-// Parse the status line + headers of a SIP response
+// Parse status, headers, and body from SIP response
 function parseResponse(data) {
   const text = data.toString();
   const m = text.match(/SIP\/2\.0 (\d+)/);
   if (!m) return null;
+  const [headerSection, ...bodyParts] = text.split('\r\n\r\n');
   const headers = {};
-  for (const line of text.split('\r\n').slice(1)) {
+  for (const line of headerSection.split('\r\n').slice(1)) {
     const c = line.indexOf(':');
     if (c > 0) headers[line.slice(0, c).trim().toLowerCase()] = line.slice(c + 1).trim();
-    if (!line) break;
   }
-  return { status: parseInt(m[1]), headers };
+  return { status: parseInt(m[1]), headers, body: bodyParts.join('\r\n\r\n') };
 }
 
-// Parse Digest auth challenge header into object
+// Extract remote RTP IP and port from SDP body
+function parseSdp(sdp = '') {
+  let ip = null, port = null;
+  for (const line of sdp.split(/\r?\n/)) {
+    if (line.startsWith('c=IN IP4 ')) ip = line.slice(9).trim();
+    if (line.startsWith('m=audio '))  port = parseInt(line.split(' ')[1]);
+  }
+  return { ip, port };
+}
+
+// Parse Digest auth challenge header
 function parseAuth(h = '') {
   const obj = {};
   h.replace(/^Digest\s+/, '').replace(/(\w+)="?([^",]+)"?/g, (_, k, v) => { obj[k] = v; });
   return obj;
 }
 
-// Calculate MD5 Digest response
-function digestResp(user, pass, realm, nonce, method, uri) {
-  const ha1 = md5(`${user}:${realm}:${pass}`);
-  const ha2 = md5(`${method}:${uri}`);
-  return md5(`${ha1}:${nonce}:${ha2}`);
-}
-
 // Build Authorization header value
 function authHeader(user, pass, realm, nonce, method, uri) {
-  const resp = digestResp(user, pass, realm, nonce, method, uri);
+  const ha1 = md5(`${user}:${realm}:${pass}`);
+  const ha2 = md5(`${method}:${uri}`);
+  const resp = md5(`${ha1}:${nonce}:${ha2}`);
   return `Digest username="${user}",realm="${realm}",nonce="${nonce}",uri="${uri}",response="${resp}"`;
 }
 
 // ─── Socket Layer ─────────────────────────────────────────────────────────────
 
-// Send a SIP message and wait for a final response (>=200) matching the callId
-function sendAndWait(socket, serverIp, serverPort, msgStr, callId, listeners, timeoutMs = 15000) {
+function udpSend(socket, serverIp, serverPort, msgStr) {
+  const buf = Buffer.from(msgStr);
+  return new Promise((res, rej) => socket.send(buf, 0, buf.length, serverPort, serverIp, e => e ? rej(e) : res()));
+}
+
+function waitForResponse(listeners, callId, timeoutMs = 15000) {
   return new Promise((resolve, reject) => {
-    const buf = Buffer.from(msgStr);
     const timer = setTimeout(() => {
       delete listeners[callId];
-      reject(new Error(`SIP timeout (no response in ${timeoutMs / 1000}s)`));
+      reject(new Error(`SIP timeout (${timeoutMs / 1000}s)`));
     }, timeoutMs);
 
     listeners[callId] = (rs) => {
-      if (rs.status < 200) return; // ignore provisional 100/180/183
+      if (rs.status < 200) return; // ignore 100/180 provisionals
       clearTimeout(timer);
       delete listeners[callId];
       resolve(rs);
     };
-
-    socket.send(buf, 0, buf.length, serverPort, serverIp, (err) => {
-      if (err) { clearTimeout(timer); delete listeners[callId]; reject(err); }
-    });
   });
 }
 
 // ─── SIP Steps ───────────────────────────────────────────────────────────────
 
 async function doRegister(socket, localIp, localPort, serverIp, serverPort, sipUser, sipPass, listeners) {
-  const regCallId  = `reg-${rand()}@${localIp}`;
-  const fromTag    = rand();
-  const regUri     = `sip:${serverIp}`;
-  const fromUri    = `sip:${sipUser}@${serverIp}`;
-  const contactUri = `sip:${sipUser}@${localIp}:${localPort}`;
+  const regCallId = `reg-${rand()}@${localIp}`;
+  const fromTag   = rand();
+  const regUri    = `sip:${serverIp}`;
+  const fromUri   = `sip:${sipUser}@${serverIp}`;
+  const contact   = `sip:${sipUser}@${localIp}:${localPort}`;
 
-  const baseHeaders = (cseq, extra = {}) => ({
+  const headers = (cseq, extra = {}) => ({
     'Via'          : `SIP/2.0/UDP ${localIp}:${localPort};rport;branch=${branch()}`,
     'From'         : `<${fromUri}>;tag=${fromTag}`,
     'To'           : `<${fromUri}>`,
     'Call-ID'      : regCallId,
     'CSeq'         : `${cseq} REGISTER`,
-    'Contact'      : `<${contactUri}>`,
+    'Contact'      : `<${contact}>`,
     'Expires'      : '3600',
     'Max-Forwards' : '70',
     ...extra
   });
 
   console.log(`[SIP] REGISTER ${sipUser}@${serverIp}...`);
-  let rs = await sendAndWait(socket, serverIp, serverPort,
-    buildSip('REGISTER', regUri, baseHeaders(1)), regCallId, listeners);
+  const waiter1 = waitForResponse(listeners, regCallId);
+  await udpSend(socket, serverIp, serverPort, buildSip('REGISTER', regUri, headers(1)));
+  let rs = await waiter1;
   console.log(`[SIP] REGISTER → ${rs.status}`);
 
   if (rs.status === 401 || rs.status === 407) {
     const auth = parseAuth(rs.headers['www-authenticate'] || rs.headers['proxy-authenticate']);
-    rs = await sendAndWait(socket, serverIp, serverPort,
-      buildSip('REGISTER', regUri, baseHeaders(2, {
-        'Authorization': authHeader(sipUser, sipPass, auth.realm, auth.nonce, 'REGISTER', regUri)
-      })), regCallId, listeners);
+    const waiter2 = waitForResponse(listeners, regCallId);
+    await udpSend(socket, serverIp, serverPort, buildSip('REGISTER', regUri, headers(2, {
+      'Authorization': authHeader(sipUser, sipPass, auth.realm, auth.nonce, 'REGISTER', regUri)
+    })));
+    rs = await waiter2;
     console.log(`[SIP] REGISTER (auth) → ${rs.status}`);
   }
 
@@ -127,13 +132,13 @@ async function doRegister(socket, localIp, localPort, serverIp, serverPort, sipU
 }
 
 async function doInvite(socket, localIp, localPort, serverIp, serverPort, sipUser, sipPass, targetPhone, listeners) {
-  const invCallId  = `call-${rand()}@${localIp}`;
-  const fromTag    = rand();
-  const toUri      = `sip:${targetPhone}@${serverIp}`;
-  const fromUri    = `sip:${sipUser}@${serverIp}`;
-  const contactUri = `sip:${sipUser}@${localIp}:${localPort}`;
+  const invCallId = `call-${rand()}@${localIp}`;
+  const fromTag   = rand();
+  const toUri     = `sip:${targetPhone}@${serverIp}`;
+  const fromUri   = `sip:${sipUser}@${serverIp}`;
+  const contact   = `sip:${sipUser}@${localIp}:${localPort}`;
 
-  const sdp = [
+  const sdpBody = [
     'v=0',
     `o=- ${Date.now()} ${Date.now()} IN IP4 ${localIp}`,
     's=BCT Call',
@@ -147,37 +152,60 @@ async function doInvite(socket, localIp, localPort, serverIp, serverPort, sipUse
     'a=sendrecv',
   ].join('\r\n') + '\r\n';
 
-  const baseHeaders = (cseq, extra = {}) => ({
+  const headers = (cseq, extra = {}) => ({
     'Via'          : `SIP/2.0/UDP ${localIp}:${localPort};rport;branch=${branch()}`,
     'From'         : `<${fromUri}>;tag=${fromTag}`,
     'To'           : `<${toUri}>`,
     'Call-ID'      : invCallId,
     'CSeq'         : `${cseq} INVITE`,
-    'Contact'      : `<${contactUri}>`,
+    'Contact'      : `<${contact}>`,
     'Max-Forwards' : '70',
     'Content-Type' : 'application/sdp',
     ...extra
   });
 
   console.log(`[SIP] INVITE → ${targetPhone}@${serverIp}`);
-  let rs = await sendAndWait(socket, serverIp, serverPort,
-    buildSip('INVITE', toUri, baseHeaders(1), sdp), invCallId, listeners, 30000);
+
+  // Register a provisional listener separately so we can log 180 Ringing
+  listeners[invCallId + '_prov'] = (rs) => {
+    if (rs.status === 180) console.log('[SIP] 180 Ringing — phone is ringing...');
+    if (rs.status === 183) console.log('[SIP] 183 Session Progress');
+  };
+
+  const waiter1 = waitForResponse(listeners, invCallId, 60000); // 60s for call answer
+  await udpSend(socket, serverIp, serverPort, buildSip('INVITE', toUri, headers(1), sdpBody));
+  let rs = await waiter1;
   console.log(`[SIP] INVITE → ${rs.status}`);
 
   if (rs.status === 401 || rs.status === 407) {
     const auth = parseAuth(rs.headers['www-authenticate'] || rs.headers['proxy-authenticate']);
-    rs = await sendAndWait(socket, serverIp, serverPort,
-      buildSip('INVITE', toUri, baseHeaders(2, {
-        'Authorization': authHeader(sipUser, sipPass, auth.realm, auth.nonce, 'INVITE', toUri)
-      }), sdp), invCallId, listeners, 30000);
+    const waiter2 = waitForResponse(listeners, invCallId, 60000);
+    await udpSend(socket, serverIp, serverPort, buildSip('INVITE', toUri, headers(2, {
+      'Authorization': authHeader(sipUser, sipPass, auth.realm, auth.nonce, 'INVITE', toUri)
+    }), sdpBody));
+    rs = await waiter2;
     console.log(`[SIP] INVITE (auth) → ${rs.status}`);
   }
 
-  if (rs.status >= 200 && rs.status < 300) {
-    console.log('[SIP] Call accepted ✓');
-    return rs;
-  }
-  throw new Error(`SIP Error: ${rs.status}`);
+  if (rs.status < 200 || rs.status >= 300) throw new Error(`SIP Error: ${rs.status}`);
+
+  // Parse remote RTP info from SDP in 200 OK body
+  const rtpInfo = parseSdp(rs.body);
+  console.log(`[SIP] Call answered ✓ — remote RTP: ${rtpInfo.ip}:${rtpInfo.port}`);
+
+  // Send ACK (mandatory after 200 OK)
+  const toWithTag = rs.headers['to'] || `<${toUri}>`;
+  await udpSend(socket, serverIp, serverPort, buildSip('ACK', toUri, {
+    'Via'          : `SIP/2.0/UDP ${localIp}:${localPort};rport;branch=${branch()}`,
+    'From'         : `<${fromUri}>;tag=${fromTag}`,
+    'To'           : toWithTag,
+    'Call-ID'      : invCallId,
+    'CSeq'         : '2 ACK',
+    'Max-Forwards' : '70'
+  }));
+  console.log('[SIP] ACK sent ✓');
+
+  return { rtpIp: rtpInfo.ip || serverIp, rtpPort: rtpInfo.port || 10000 };
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -188,9 +216,7 @@ async function makeSipCall(targetPhone) {
   const sipUser    = process.env.SIP_USERNAME;
   const sipPass    = process.env.SIP_PASSWORD;
   const localIp    = getLocalIp();
-  const localPort  = 15060;
 
-  // Shared listener map: callId → callback
   const listeners = {};
 
   const socket = dgram.createSocket('udp4');
@@ -198,21 +224,29 @@ async function makeSipCall(targetPhone) {
     const rs = parseResponse(msg);
     if (!rs) return;
     const cid = rs.headers['call-id'];
-    console.log(`[SIP IN ] ${rs.status} (call-id: ${cid})`);
-    if (listeners[cid]) listeners[cid](rs);
+    if (rs.status) {
+      console.log(`[SIP IN ] ${rs.status} (${cid})`);
+      const provCb = listeners[cid + '_prov'];
+      if (provCb && rs.status < 200) provCb(rs);
+      if (listeners[cid]) listeners[cid](rs);
+    }
   });
 
-  await new Promise((res, rej) => socket.bind(localPort, (err) => err ? rej(err) : res()));
-  console.log(`[SIP] Socket bound to ${localIp}:${localPort}`);
+  // Bind to port 0 → OS assigns a free ephemeral port (no EADDRINUSE)
+  await new Promise((res, rej) => socket.bind(0, (err) => err ? rej(err) : res()));
+  const localPort = socket.address().port;
+  console.log(`[SIP] Socket bound → ${localIp}:${localPort}`);
 
   try {
     await doRegister(socket, localIp, localPort, serverIp, serverPort, sipUser, sipPass, listeners);
-    const result = await doInvite(socket, localIp, localPort, serverIp, serverPort, sipUser, sipPass, targetPhone, listeners);
-    // Keep socket open for 2 minutes to sustain the call
-    setTimeout(() => socket.close(), 120000);
-    return result;
+    const rtpInfo = await doInvite(socket, localIp, localPort, serverIp, serverPort, sipUser, sipPass, targetPhone, listeners);
+
+    // Keep socket open for call duration (2 min)
+    setTimeout(() => { try { socket.close(); } catch (_) {} }, 120000);
+
+    return { ...rtpInfo, socket };
   } catch (err) {
-    socket.close();
+    try { socket.close(); } catch (_) {}
     throw err;
   }
 }
