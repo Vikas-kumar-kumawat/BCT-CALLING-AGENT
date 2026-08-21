@@ -1,10 +1,18 @@
-const { makeSipCall }  = require('../services/sipService')
+const { makeSipCall } = require('../services/sipService')
 const { getLocalAudio } = require('../services/audioService')
-const { streamAudio }   = require('../services/rtpService')
+const { streamAudio } = require('../services/rtpService')
 
 let conversationLogs = []
 
+
+
+
+
+
+
+
 async function startCall(req, res) {
+
   const { name = 'Customer', phone } = req.body || {}
   if (!phone) return res.status(400).json({ success: false, message: 'Phone number is required' })
 
@@ -40,7 +48,20 @@ async function startCall(req, res) {
       res.status(500).json({ success: false, message: err.message, logs: conversationLogs })
     }
   }
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
 
 async function cancelCall(req, res) {
   conversationLogs.push({

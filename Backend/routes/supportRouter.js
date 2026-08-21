@@ -1,9 +1,10 @@
 const express = require('express')
 const router = express.Router()
-const { startCall, cancelCall, getLogs } = require('../controllers/supportController')
+const { startCall, selectOption, getLogs } = require('../controllers/supportController')
 
 router.post('/', startCall)
-router.post('/cancel', cancelCall)
+router.post('/option', selectOption)
+router.post('/dtmf', selectOption)
 router.get('/logs', getLogs)
 
 module.exports = router

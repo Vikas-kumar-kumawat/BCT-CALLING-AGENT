@@ -3,6 +3,7 @@ import Home from './Home'
 import FeedbackCalls from './FeedbackCalls'
 import RechargeReminder from './RechargeReminder'
 import PlanPromotion from './PlanPromotion'
+import SalesAgent from './SalesAgent'
 import InboundCalls from './InboundCalls'
 
 export default function App() {
@@ -10,6 +11,7 @@ export default function App() {
 
   const outboundItems = [
     { id: 'feedback', label: 'Feedback Calls', icon: '📞' },
+    { id: 'sales', label: 'Sales Agent', icon: '💼' },
     { id: 'recharge', label: 'Recharge Reminder', icon: '💳' },
     { id: 'promotion', label: 'Plan Promotion', icon: '🚀' },
   ]
@@ -108,6 +110,7 @@ export default function App() {
       <main className="flex-1 overflow-y-auto bg-[#08090a] p-8">
         {tab === 'home' && <Home onNavigate={setTab} />}
         {tab === 'feedback' && <FeedbackCalls />}
+        {tab === 'sales' && <SalesAgent />}
         {tab === 'recharge' && <RechargeReminder />}
         {tab === 'promotion' && <PlanPromotion />}
         {tab === 'inbound' && <InboundCalls />}
