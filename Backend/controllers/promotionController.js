@@ -28,16 +28,20 @@ async function startCall(req, res) {
 
   const twiml = new twilio.twiml.VoiceResponse()
 
-  const gather = twiml.gather({
+  // 1. Play greeting TTS prompt FIRST to prevent self-voice capture
+  twiml.say({ language: 'hi-IN', voice: 'Polly.Aditi' }, agentGreeting)
+
+  // 2. Open Gather AFTER prompt finishes (bargeIn: false)
+  twiml.gather({
     input: 'speech dtmf',
     language: 'hi-IN',
-    action: `${baseUrl}/api/promotion/gather?bypass-tunnel-reminder=true`,
-    method: 'POST',
+    bargeIn: false,
     speechTimeout: 'auto',
-    timeout: 5
+    timeout: 6,
+    action: `${baseUrl}/api/promotion/gather?bypass-tunnel-reminder=true`,
+    method: 'POST'
   })
 
-  gather.say({ language: 'hi-IN', voice: 'Polly.Aditi' }, agentGreeting)
   twiml.say({ language: 'hi-IN', voice: 'Polly.Aditi' }, 'हमें आपकी आवाज़ नहीं सुनाई दी। धन्यवाद और अलविदा।')
 
   try {
@@ -95,7 +99,7 @@ async function cancelCall(req, res) {
 function handleGather(req, res) {
   try {
     const body = req.body || {}
-    const speechText = body.SpeechResult || body.Digits || 'No speech detected'
+    const speechText = (body.SpeechResult || body.Digits || '').trim()
     const confidence = body.Confidence || 'N/A'
 
     let agentClosing = 'बहुत बढ़िया! हमने ऑफर की पूरी जानकारी आपके व्हाट्सएप पर भेज दी है। हमारी टीम आपको जल्द कॉल करेगी। धन्यवाद!'
@@ -105,6 +109,15 @@ function handleGather(req, res) {
       agentClosing = 'कोई बात नहीं सर! बीफाइबनेट चुनने के लिए धन्यवाद। भविष्य में कभी भी अपग्रेड करने के लिए आप हमारी वेबसाइट विज़िट कर सकते हैं।'
     } else if (lowerSpeech.includes('हाँ') || lowerSpeech.includes('हां') || lowerSpeech.includes('बताइए') || lowerSpeech.includes('yes') || lowerSpeech.includes('जानकारी')) {
       agentClosing = 'जी धन्यवाद! इस प्लान में आपको 300 एमबीपीएस स्पीड के साथ नेटफ्लिक्स और 14 ओटीटी ऐप्स मिलेंगे। व्हाट्सएप पर अपग्रेड लिंक भेज दिया गया है।'
+    }
+
+    // Ignore self-captured audio echoes
+    if (!speechText || speechText.includes('एक्सक्लूसिव ऑफर') || speechText.includes('बीफाइबनेट')) {
+      console.log(`[Promotion Ignored Echo]: "${speechText}"`)
+      const twiml = new twilio.twiml.VoiceResponse()
+      twiml.say({ language: 'hi-IN', voice: 'Polly.Aditi' }, agentClosing)
+      res.set('Content-Type', 'text/xml')
+      return res.send(twiml.toString())
     }
 
     console.log(`[Promotion Speech Captured]: "${speechText}" (Confidence: ${confidence})`)

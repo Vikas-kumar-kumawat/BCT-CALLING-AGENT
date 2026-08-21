@@ -4,8 +4,8 @@ const { getTunnelUrl, startTunnel } = require('../config/tunnel')
 
 let conversationLogs = []
 let activeCallSid = null
-// Webhook for Incoming Calls to +17853845847
 
+// Webhook for Incoming Calls to +17853845847
 function handleIncomingCall(req, res) {
   const caller = req.body?.From || req.query?.From || 'Incoming Caller'
   const greetingText = 'Welcome to BCT Support. Thank you for calling BCT Support.'
@@ -21,22 +21,27 @@ function handleIncomingCall(req, res) {
   }]
 
   const twiml = new twilio.twiml.VoiceResponse()
+  
+  // 1. Play greeting prompt FIRST to prevent self-voice capture
   twiml.say({ voice: 'Polly.Aditi', language: 'en-IN' }, greetingText)
+
+  // 2. Open Gather AFTER prompt finishes (bargeIn: false)
+  const baseUrl = getTunnelUrl()
+  if (baseUrl) {
+    twiml.gather({
+      input: 'speech dtmf',
+      language: 'en-IN',
+      bargeIn: false,
+      speechTimeout: 'auto',
+      timeout: 6,
+      action: `${baseUrl}/api/support/gather?bypass-tunnel-reminder=true`,
+      method: 'POST'
+    })
+  }
 
   res.set('Content-Type', 'text/xml')
   res.send(twiml.toString())
 }
-
-
-
-
-
-
-
-
-
-
-
 
 async function startCall(req, res) {
   const { name = 'Vikas', phone = '9057262630' } = req.body || {}
@@ -61,7 +66,20 @@ async function startCall(req, res) {
   }]
 
   const twiml = new twilio.twiml.VoiceResponse()
+
+  // 1. Play greeting prompt FIRST to prevent self-voice capture
   twiml.say({ voice: 'Polly.Aditi', language: 'en-IN' }, agentGreeting)
+
+  // 2. Open Gather AFTER prompt finishes (bargeIn: false)
+  twiml.gather({
+    input: 'speech dtmf',
+    language: 'en-IN',
+    bargeIn: false,
+    speechTimeout: 'auto',
+    timeout: 6,
+    action: `${baseUrl}/api/support/gather?bypass-tunnel-reminder=true`,
+    method: 'POST'
+  })
 
   try {
     if (client) {
@@ -75,10 +93,6 @@ async function startCall(req, res) {
     res.status(500).json({ success: false, message: err.message })
   }
 }
-
-
-
-
 
 async function cancelCall(req, res) {
   try {
@@ -98,9 +112,18 @@ async function cancelCall(req, res) {
 function handleGather(req, res) {
   try {
     const body = req.body || {}
-    const speechText = body.SpeechResult || body.Digits || 'No speech detected'
+    const speechText = (body.SpeechResult || body.Digits || '').trim()
     const confidence = body.Confidence || 'N/A'
     const agentClosing = 'Thank you for contacting BCT Support. Have a great day!'
+
+    // Ignore self-captured audio echoes
+    if (!speechText || speechText.toLowerCase().includes('welcome to bct support')) {
+      console.log(`[Support Ignored Echo]: "${speechText}"`)
+      const twiml = new twilio.twiml.VoiceResponse()
+      twiml.say({ voice: 'Polly.Aditi', language: 'en-IN' }, agentClosing)
+      res.set('Content-Type', 'text/xml')
+      return res.send(twiml.toString())
+    }
 
     console.log(`[Support Speech Captured]: "${speechText}" (Confidence: ${confidence})`)
 

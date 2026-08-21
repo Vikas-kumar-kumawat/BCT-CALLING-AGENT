@@ -5,9 +5,6 @@ const { getTunnelUrl, startTunnel } = require('../config/tunnel')
 let conversationLogs = []
 let activeCallSid = null
 
-
-
-
 async function startCall(req, res) {
   const { name = 'Customer', phone } = req.body || {}
   if (!phone) return res.status(400).json({ success: false, message: 'Phone number is required' })
@@ -32,16 +29,20 @@ async function startCall(req, res) {
 
   const twiml = new twilio.twiml.VoiceResponse()
 
-  const gather = twiml.gather({
+  // 1. Play greeting audio prompt FIRST to avoid self-voice capture
+  twiml.play(audioUrl)
+
+  // 2. Open Gather AFTER prompt finishes (bargeIn: false)
+  twiml.gather({
     input: 'speech dtmf',
     language: 'hi-IN',
-    action: `${baseUrl}/api/feedbackcalls/gather?bypass-tunnel-reminder=true`,
-    method: 'POST',
+    bargeIn: false,
     speechTimeout: 'auto',
-    timeout: 5
+    timeout: 6,
+    action: `${baseUrl}/api/feedbackcalls/gather?bypass-tunnel-reminder=true`,
+    method: 'POST'
   })
 
-  gather.play(audioUrl)
   twiml.say({ language: 'hi-IN', voice: 'Polly.Aditi' }, 'हमें आपकी आवाज़ नहीं सुनाई दी। धन्यवाद और अलविदा।')
 
   try {
@@ -69,13 +70,6 @@ async function startCall(req, res) {
     res.status(500).json({ success: false, message: err.message })
   }
 }
-
-
-
-
-
-
-
 
 async function cancelCall(req, res) {
   try {
@@ -105,13 +99,21 @@ async function cancelCall(req, res) {
   }
 }
 
-
 function handleGather(req, res) {
   try {
     const body = req.body || {}
-    const speechText = body.SpeechResult || body.Digits || 'No speech detected'
+    const speechText = (body.SpeechResult || body.Digits || '').trim()
     const confidence = body.Confidence || 'N/A'
     const agentClosing = 'आपका फीडबैक शेयर करने के लिए बहुत-बहुत धन्यवाद! आपका दिन शुभ हो।'
+
+    // Ignore self-captured audio echoes or empty triggers
+    if (!speechText || speechText.includes('नमस्ते') || speechText.includes('बीफाइबनेट')) {
+      console.log(`[Feedback Ignored Echo]: "${speechText}"`)
+      const twiml = new twilio.twiml.VoiceResponse()
+      twiml.say({ language: 'hi-IN', voice: 'Polly.Aditi' }, agentClosing)
+      res.set('Content-Type', 'text/xml')
+      return res.send(twiml.toString())
+    }
 
     console.log(`[Feedback Speech Captured]: "${speechText}" (Confidence: ${confidence})`)
 

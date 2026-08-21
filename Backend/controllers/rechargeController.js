@@ -28,16 +28,20 @@ async function startCall(req, res) {
 
   const twiml = new twilio.twiml.VoiceResponse()
 
-  const gather = twiml.gather({
+  // 1. Play greeting TTS prompt FIRST to prevent self-voice capture
+  twiml.say({ language: 'hi-IN', voice: 'Polly.Aditi' }, agentGreeting)
+
+  // 2. Open Gather AFTER prompt finishes (bargeIn: false)
+  twiml.gather({
     input: 'speech dtmf',
     language: 'hi-IN',
-    action: `${baseUrl}/api/rechargereminder/gather?bypass-tunnel-reminder=true`,
-    method: 'POST',
+    bargeIn: false,
     speechTimeout: 'auto',
-    timeout: 5
+    timeout: 6,
+    action: `${baseUrl}/api/rechargereminder/gather?bypass-tunnel-reminder=true`,
+    method: 'POST'
   })
 
-  gather.say({ language: 'hi-IN', voice: 'Polly.Aditi' }, agentGreeting)
   twiml.say({ language: 'hi-IN', voice: 'Polly.Aditi' }, 'हमें आपकी आवाज़ नहीं सुनाई दी। धन्यवाद और अलविदा।')
 
   try {
@@ -95,7 +99,7 @@ async function cancelCall(req, res) {
 function handleGather(req, res) {
   try {
     const body = req.body || {}
-    const speechText = body.SpeechResult || body.Digits || 'No speech detected'
+    const speechText = (body.SpeechResult || body.Digits || '').trim()
     const confidence = body.Confidence || 'N/A'
 
     let agentClosing = 'आपका बहुत-बहुत धन्यवाद! रिचार्ज का पेमेंट लिंक आपके व्हाट्सएप पर भेज दिया गया है। आपका दिन शुभ हो।'
@@ -105,6 +109,15 @@ function handleGather(req, res) {
       agentClosing = 'कोई बात नहीं सर! रिमाइंडर के लिए धन्यवाद। जब भी आप चाहें बीफाइबनेट ऐप से रिचार्ज कर सकते हैं।'
     } else if (lowerSpeech.includes('हाँ') || lowerSpeech.includes('हां') || lowerSpeech.includes('करना है') || lowerSpeech.includes('yes')) {
       agentClosing = 'जी धन्यवाद! भुगतान लिंक आपके मोबाइल नंबर पर भेज दिया गया है। ऑनलाइन पेमेंट करते ही आपका इंटरनेट जारी रहेगा।'
+    }
+
+    // Ignore self-captured audio echoes
+    if (!speechText || speechText.includes('बीफाइबनेट') || speechText.includes('समाप्त हो रहा')) {
+      console.log(`[Recharge Ignored Echo]: "${speechText}"`)
+      const twiml = new twilio.twiml.VoiceResponse()
+      twiml.say({ language: 'hi-IN', voice: 'Polly.Aditi' }, agentClosing)
+      res.set('Content-Type', 'text/xml')
+      return res.send(twiml.toString())
     }
 
     console.log(`[Recharge Speech Captured]: "${speechText}" (Confidence: ${confidence})`)
