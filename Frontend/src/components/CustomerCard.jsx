@@ -1,4 +1,4 @@
-export default function CustomerCard({ onCall, onCancelCall, loading, status }) {
+export default function CustomerCard({ onCall, onCancelCall, loading, status, phoneInput, onPhoneChange }) {
   return (
     <div className="bg-[#111215] border border-[#22242b] rounded-2xl p-6 space-y-4 shadow-xl font-sans h-fit">
       <div className="flex justify-between items-center border-b border-[#1c1e24] pb-3">
@@ -13,9 +13,14 @@ export default function CustomerCard({ onCall, onCancelCall, loading, status }) 
           <span className="text-zinc-500 font-mono">Customer:</span>
           <span className="text-white font-semibold">Vikas</span>
         </div>
-        <div className="flex justify-between py-1 border-b border-[#1c1e24]/60">
+        <div className="flex justify-between items-center py-1 border-b border-[#1c1e24]/60">
           <span className="text-zinc-500 font-mono">Phone:</span>
-          <span className="text-emerald-400 font-mono font-bold">+91 9057262630</span>
+          <input 
+            type="text" 
+            value={phoneInput} 
+            onChange={(e) => onPhoneChange(e.target.value)}
+            className="bg-[#17181c] border border-[#262832] text-emerald-400 font-mono font-bold px-2 py-1 rounded w-32 text-right focus:outline-none focus:border-emerald-500"
+          />
         </div>
         <div className="flex justify-between py-1 border-b border-[#1c1e24]/60">
           <span className="text-zinc-500 font-mono">Service:</span>

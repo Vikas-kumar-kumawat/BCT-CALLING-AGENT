@@ -19,7 +19,7 @@
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "localtunnel": "^2.0.2",
-    "twilio": "^5.12.2"
+    "sip": "^0.0.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

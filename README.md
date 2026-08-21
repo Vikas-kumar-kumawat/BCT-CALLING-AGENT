@@ -1,6 +1,6 @@
 # BCT Voice AI Calling Agent
 
-Full-stack AI Voice Calling & Support Console built with Node.js, Express, Twilio Voice API, React, and Tailwind CSS.
+Full-stack AI Voice Calling & Support Console built with Node.js, Express, React, and Tailwind CSS.
 
 ## 🚀 Features
 
@@ -9,7 +9,7 @@ Full-stack AI Voice Calling & Support Console built with Node.js, Express, Twili
   - `Recharge Reminder`: Broadband plan expiry reminders with payment link generation.
   - `Plan Promotion`: Ultra fiber 300 Mbps upgrade campaigns.
 - **Inbound Support IVR**:
-  - Auto-answers incoming calls to `+1 (785) 384-5847` with greeting: *"Welcome to BCT Support. Thank you for calling BCT Support."*
+  - Auto-answers incoming calls with greeting: *"Welcome to BCT Support. Thank you for calling BCT Support."*
 - **Live Stream Console**:
   - Real-time animated speech transcript streaming.
   - 1-click **Cancel Call** action across all agents.
@@ -24,9 +24,7 @@ Full-stack AI Voice Calling & Support Console built with Node.js, Express, Twili
 2. **Set up Environment Variables**:
    Create `Backend/.env`:
    ```env
-   TWILIO_ACCOUNT_SID=your_account_sid
-   TWILIO_AUTH_TOKEN=your_auth_token
-   TWILIO_PHONE_NUMBER=+17853845847
+   # Add your environment variables here
    ```
 
 3. **Start Development Servers**:
@@ -39,7 +37,4 @@ Full-stack AI Voice Calling & Support Console built with Node.js, Express, Twili
 2. Create a new **Web Service**:
    - **Build Command**: `npm run build`
    - **Start Command**: `npm start`
-3. Add Environment Variables on Render:
-   - `TWILIO_ACCOUNT_SID`
-   - `TWILIO_AUTH_TOKEN`
-   - `TWILIO_PHONE_NUMBER`
+3. Add Environment Variables on Render if necessary.

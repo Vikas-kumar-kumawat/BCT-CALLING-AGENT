@@ -7,6 +7,7 @@ import { getApiUrl } from './api'
 export default function FeedbackCalls() {
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('')
+  const [phone, setPhone] = useState('9057262630')
   const { logs, displayedTextMap, fetchLogs } = useConversation('/api/feedbackcalls/logs')
 
   const handleCall = async () => {
@@ -16,7 +17,7 @@ export default function FeedbackCalls() {
       const res = await fetch(getApiUrl('/api/feedbackcalls'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'Vikas', phone: '9057262630' })
+        body: JSON.stringify({ name: 'Vikas', phone: phone })
       })
       const data = await res.json()
       setStatus(res.ok ? data.message || 'Call initiated!' : `Call failed: ${data.message}`)
@@ -47,7 +48,14 @@ export default function FeedbackCalls() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <CustomerCard onCall={handleCall} onCancelCall={handleCancelCall} loading={loading} status={status} />
+        <CustomerCard 
+          onCall={handleCall} 
+          onCancelCall={handleCancelCall} 
+          loading={loading} 
+          status={status} 
+          phoneInput={phone}
+          onPhoneChange={setPhone}
+        />
         <ConversationStream logs={logs} displayedTextMap={displayedTextMap} />
       </div>
     </div>

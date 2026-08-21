@@ -41,30 +41,22 @@ export default function InboundCalls() {
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
         <h1 className="text-xl font-extrabold text-white tracking-tight">BCT Support IVR</h1>
-        <p className="text-xs text-zinc-400 mt-1">Inbound automated helpline for +1 (785) 384-5847.</p>
+        <p className="text-xs text-zinc-400 mt-1">Simulated inbound automated helpline.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-[#111215] border border-[#22242b] rounded-2xl p-6 space-y-4 shadow-xl font-sans h-fit">
           <div className="flex justify-between items-center border-b border-[#1c1e24] pb-3">
-            <h2 className="text-xs font-extrabold uppercase tracking-widest text-zinc-300">Twilio Hotline Config</h2>
+            <h2 className="text-xs font-extrabold uppercase tracking-widest text-zinc-300">Support Config</h2>
             <span className="text-[10px] font-mono bg-[#17181c] border border-[#262832] text-cyan-400 px-2 py-0.5 rounded-md font-bold">
-              LIVE HOTLINE
+              SIMULATED HOTLINE
             </span>
           </div>
 
           <div className="space-y-2.5 text-xs text-zinc-400">
             <div className="flex justify-between py-1 border-b border-[#1c1e24]/60">
-              <span className="text-zinc-500 font-mono">Twilio Line:</span>
-              <span className="text-white font-mono font-bold">+1 (785) 384-5847</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-[#1c1e24]/60">
               <span className="text-zinc-500 font-mono">Greeting:</span>
               <span className="text-cyan-400 font-medium">"Welcome to BCT Support"</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-[#1c1e24]/60">
-              <span className="text-zinc-500 font-mono">Webhook Endpoint:</span>
-              <span className="text-zinc-300 font-mono text-[11px]">/api/support/incoming</span>
             </div>
           </div>
 
