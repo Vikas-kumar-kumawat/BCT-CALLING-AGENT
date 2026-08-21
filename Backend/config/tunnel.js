@@ -1,6 +1,12 @@
 const path = require('path')
 const { spawn } = require('child_process')
-const cloudflared = require('cloudflared')
+
+let cloudflared = null
+try {
+  cloudflared = require('cloudflared')
+} catch (e) {
+  // cloudflared binary optional in production
+}
 
 let liveUrl = ''
 let tunnelPromise = null
@@ -22,7 +28,7 @@ function startTunnel(port = 8000) {
 
   tunnelPromise = new Promise((resolve) => {
     try {
-      const binPath = cloudflared.bin || path.join(__dirname, '../node_modules/cloudflared/bin/cloudflared.exe')
+      const binPath = (cloudflared && cloudflared.bin) || path.join(__dirname, '../node_modules/cloudflared/bin/cloudflared.exe')
       const child = spawn(binPath, ['tunnel', '--url', `http://localhost:${port}`])
 
       child.on('error', (err) => console.error('[Cloudflare Tunnel error]', err.message))

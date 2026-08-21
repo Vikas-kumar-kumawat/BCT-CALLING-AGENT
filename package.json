@@ -5,7 +5,7 @@
   "main": "Backend/server.js",
   "scripts": {
     "postinstall": "npm install --prefix Backend && npm install --prefix Frontend",
-    "build": "npm run build --prefix Frontend",
+    "build": "npm install --prefix Backend && npm install --prefix Frontend && npm run build --prefix Frontend",
     "start": "node Backend/server.js"
   },
   "keywords": [],
