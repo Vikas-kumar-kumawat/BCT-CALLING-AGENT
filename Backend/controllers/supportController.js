@@ -1,16 +1,22 @@
 const { client, twilio, twilioPhone } = require('../config/twilio')
 const { formatPhoneNumber } = require('../utils/formatPhone')
 const { getTunnelUrl, startTunnel } = require('../config/tunnel')
+const { generateSpeechAudio } = require('../services/elevenlabsService')
 
 let conversationLogs = []
 let activeCallSid = null
 
 // Webhook for Incoming Calls to +17853845847
-function handleIncomingCall(req, res) {
+async function handleIncomingCall(req, res) {
   const caller = req.body?.From || req.query?.From || 'Incoming Caller'
   const greetingText = 'Welcome to BCT Support. Thank you for calling BCT Support.'
 
   console.log(`[Incoming Call Received] Phone: +17853845847 | From: ${caller}`)
+
+  let baseUrl = getTunnelUrl()
+  if (!baseUrl || baseUrl.includes('localhost')) {
+    baseUrl = await startTunnel(8000)
+  }
 
   conversationLogs = [{
     id: Date.now(),
@@ -22,11 +28,15 @@ function handleIncomingCall(req, res) {
 
   const twiml = new twilio.twiml.VoiceResponse()
   
-  // 1. Play greeting prompt FIRST to prevent self-voice capture
-  twiml.say({ voice: 'Polly.Aditi', language: 'en-IN' }, greetingText)
+  // Try ElevenLabs AI Voice first, fallback to Polly if needed
+  const audioFile = await generateSpeechAudio(greetingText)
+  if (audioFile && baseUrl) {
+    twiml.play(`${baseUrl}/audio/${audioFile}?bypass-tunnel-reminder=true`)
+  } else {
+    twiml.say({ voice: 'Polly.Aditi', language: 'en-IN' }, greetingText)
+  }
 
-  // 2. Open Gather AFTER prompt finishes (bargeIn: false)
-  const baseUrl = getTunnelUrl()
+  // Open Gather AFTER prompt finishes (bargeIn: false)
   if (baseUrl) {
     twiml.gather({
       input: 'speech dtmf',
@@ -67,10 +77,14 @@ async function startCall(req, res) {
 
   const twiml = new twilio.twiml.VoiceResponse()
 
-  // 1. Play greeting prompt FIRST to prevent self-voice capture
-  twiml.say({ voice: 'Polly.Aditi', language: 'en-IN' }, agentGreeting)
+  // ElevenLabs AI Voice generation
+  const audioFile = await generateSpeechAudio(agentGreeting)
+  if (audioFile && baseUrl) {
+    twiml.play(`${baseUrl}/audio/${audioFile}?bypass-tunnel-reminder=true`)
+  } else {
+    twiml.say({ voice: 'Polly.Aditi', language: 'en-IN' }, agentGreeting)
+  }
 
-  // 2. Open Gather AFTER prompt finishes (bargeIn: false)
   twiml.gather({
     input: 'speech dtmf',
     language: 'en-IN',
@@ -109,18 +123,28 @@ async function cancelCall(req, res) {
   }
 }
 
-function handleGather(req, res) {
+async function handleGather(req, res) {
   try {
     const body = req.body || {}
     const speechText = (body.SpeechResult || body.Digits || '').trim()
     const confidence = body.Confidence || 'N/A'
     const agentClosing = 'Thank you for contacting BCT Support. Have a great day!'
 
+    let baseUrl = getTunnelUrl()
+    if (!baseUrl || baseUrl.includes('localhost')) {
+      baseUrl = await startTunnel(8000)
+    }
+
     // Ignore self-captured audio echoes
     if (!speechText || speechText.toLowerCase().includes('welcome to bct support')) {
       console.log(`[Support Ignored Echo]: "${speechText}"`)
       const twiml = new twilio.twiml.VoiceResponse()
-      twiml.say({ voice: 'Polly.Aditi', language: 'en-IN' }, agentClosing)
+      const audioFile = await generateSpeechAudio(agentClosing)
+      if (audioFile && baseUrl) {
+        twiml.play(`${baseUrl}/audio/${audioFile}?bypass-tunnel-reminder=true`)
+      } else {
+        twiml.say({ voice: 'Polly.Aditi', language: 'en-IN' }, agentClosing)
+      }
       res.set('Content-Type', 'text/xml')
       return res.send(twiml.toString())
     }
@@ -131,7 +155,12 @@ function handleGather(req, res) {
     conversationLogs.push({ id: Date.now() + 1, sender: 'agent', speaker: 'BCT Support Agent', text: agentClosing, timestamp: new Date().toLocaleTimeString() })
 
     const twiml = new twilio.twiml.VoiceResponse()
-    twiml.say({ voice: 'Polly.Aditi', language: 'en-IN' }, agentClosing)
+    const audioFile = await generateSpeechAudio(agentClosing)
+    if (audioFile && baseUrl) {
+      twiml.play(`${baseUrl}/audio/${audioFile}?bypass-tunnel-reminder=true`)
+    } else {
+      twiml.say({ voice: 'Polly.Aditi', language: 'en-IN' }, agentClosing)
+    }
 
     res.set('Content-Type', 'text/xml')
     res.send(twiml.toString())
