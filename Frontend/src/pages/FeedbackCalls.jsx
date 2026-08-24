@@ -25,10 +25,7 @@ export default function FeedbackCalls() {
     setStatus('')
     const targetName = customer ? customer.name : selectedCustomer.name
     const targetPhone = customer ? (customer['mobile-number'] || customer.phone) : phone
-    if (customer) {
-      setActiveCallId(customer.id)
-      handleSelectCustomer(customer)
-    }
+    if (customer) { setActiveCallId(customer.id); handleSelectCustomer(customer) }
 
     try {
       const res = await fetch(getApiUrl('/api/feedbackcalls'), {
@@ -51,23 +48,28 @@ export default function FeedbackCalls() {
       await fetch(getApiUrl('/api/feedbackcalls/cancel'), { method: 'POST' })
       setStatus('Call cancelled')
       fetchLogs()
-    } catch (err) {
+    } catch {
       setStatus('Call session ended')
     } finally {
       setActiveCallId(null)
     }
   }
 
-  const isLiveCall = loading || activeCallId !== null || (status && (status.includes('initiated') || status.includes('connected') || status.includes('playing')))
+  const isLiveCall = loading || activeCallId !== null ||
+    (status && (status.includes('initiated') || status.includes('connected') || status.includes('playing')))
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 font-sans">
-      <div className="flex justify-between items-center border-b border-[#22242b] pb-4">
-        <h1 className="text-2xl font-extrabold text-white tracking-tight">FEEDBACK CALLS</h1>
+    <div className="max-w-7xl mx-auto space-y-6">
+
+      {/* Clean Header Bar */}
+      <div className="pb-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <h1 style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }} className="text-3xl font-bold tracking-tight">
+          Feedback Calls
+        </h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Left Column: Customer Directory (7/12 width) */}
+      {/* Layout grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         <div className="lg:col-span-7">
           <CustomerListCard
             onCall={handleCall}
@@ -78,9 +80,7 @@ export default function FeedbackCalls() {
             status={status}
           />
         </div>
-
-        {/* Right Column: Target Profile + Live Stream (5/12 width) */}
-        <div className="lg:col-span-5 space-y-5">
+        <div className="lg:col-span-5 space-y-4">
           <CustomerCard
             customerName={selectedCustomer.name}
             onCall={() => handleCall()}
@@ -90,9 +90,9 @@ export default function FeedbackCalls() {
             phoneInput={phone}
             onPhoneChange={setPhone}
           />
-          <ConversationStream 
-            logs={logs} 
-            displayedTextMap={displayedTextMap} 
+          <ConversationStream
+            logs={logs}
+            displayedTextMap={displayedTextMap}
             selectedCustomer={selectedCustomer}
             isLiveCall={isLiveCall}
             status={status}

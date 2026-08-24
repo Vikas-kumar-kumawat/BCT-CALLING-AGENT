@@ -1,51 +1,53 @@
+import { Phone, X } from 'lucide-react'
+
 export default function RechargeCard({ onCall, onCancelCall, loading, status }) {
+  const rows = [
+    { label: 'Customer',       value: 'Vikas',               valueStyle: { color: 'var(--text-primary)', fontWeight: 600 } },
+    { label: 'Phone',          value: '+91 9057262630',       valueStyle: { color: '#e00000', fontFamily: 'monospace', fontWeight: 700 } },
+    { label: 'Current Plan',   value: '100 Mbps Unlimited',  valueStyle: { color: 'var(--text-secondary)' } },
+    { label: 'Renewal Amount', value: '₹799',                valueStyle: { color: 'var(--text-primary)', fontWeight: 700 } },
+  ]
+
   return (
-    <div className="bg-[#111215] border border-[#22242b] rounded-2xl p-6 space-y-4 shadow-xl font-sans h-fit">
-      <div className="flex justify-between items-center border-b border-[#1c1e24] pb-3">
-        <h2 className="text-xs font-extrabold uppercase tracking-widest text-zinc-300">Expiring Account Details</h2>
-        <span className="text-[10px] font-mono bg-[#17181c] border border-[#262832] text-amber-400 px-2 py-0.5 rounded-md font-bold">
-          EXPIRES TOMORROW
+    <div className="cg-card overflow-hidden h-fit">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <div>
+          <p className="forbes-label-red mb-0.5">ACCOUNT EXPIRY</p>
+          <p style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }} className="font-bold text-base leading-tight">
+            Expiring Account Details
+          </p>
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 border border-amber-300 bg-amber-50 dark:border-amber-500/20 dark:bg-amber-500/5 dark:text-amber-400 px-2.5 py-1 rounded-md">
+          Expires Tomorrow
         </span>
       </div>
 
-      <div className="space-y-2.5 text-xs text-zinc-400">
-        <div className="flex justify-between py-1 border-b border-[#1c1e24]/60">
-          <span className="text-zinc-500 font-mono">Customer:</span>
-          <span className="text-white font-semibold">Vikas</span>
-        </div>
-        <div className="flex justify-between py-1 border-b border-[#1c1e24]/60">
-          <span className="text-zinc-500 font-mono">Phone:</span>
-          <span className="text-amber-400 font-mono font-bold">+91 9057262630</span>
-        </div>
-        <div className="flex justify-between py-1 border-b border-[#1c1e24]/60">
-          <span className="text-zinc-500 font-mono">Current Plan:</span>
-          <span className="text-zinc-300">100 Mbps Unlimited</span>
-        </div>
-        <div className="flex justify-between py-1 border-b border-[#1c1e24]/60">
-          <span className="text-zinc-500 font-mono">Renewal Amount:</span>
-          <span className="text-white font-bold">₹799</span>
-        </div>
+      {/* Data rows */}
+      <div className="px-5 py-4">
+        {rows.map((r, i) => (
+          <div key={i} className="flex items-center justify-between py-2.5" style={{ borderBottom: i < rows.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+            <span className="text-[11px] font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{r.label}</span>
+            <span className="text-[12px]" style={r.valueStyle}>{r.value}</span>
+          </div>
+        ))}
       </div>
 
-      <div className="flex gap-3">
-        <button
-          onClick={onCall}
-          disabled={loading}
-          className="flex-1 bg-white hover:bg-zinc-200 text-black font-semibold py-3 px-4 rounded-xl transition-all text-xs tracking-wide shadow-md active:scale-98 cursor-pointer disabled:opacity-50"
-        >
-          {loading ? 'Initiating...' : 'Send Call'}
+      {/* Actions */}
+      <div className="px-5 pb-4 flex gap-2.5">
+        <button onClick={onCall} disabled={loading} className="btn-primary flex items-center gap-1.5 flex-1 justify-center py-2.5">
+          <Phone size={12} />
+          {loading ? 'Initiating...' : 'Send Reminder Call'}
         </button>
-        <button
-          onClick={onCancelCall}
-          className="bg-rose-600/90 hover:bg-rose-600 text-white font-semibold py-3 px-4 rounded-xl transition-all text-xs tracking-wide shadow-md active:scale-98 cursor-pointer"
-        >
-          Cancel Call
+        <button onClick={onCancelCall} className="btn-ghost flex items-center gap-1 px-3 py-2.5">
+          <X size={12} />
+          Cancel
         </button>
       </div>
 
       {status && (
-        <div className="p-3 bg-[#17181c] border border-[#262832] rounded-xl text-xs font-mono text-amber-400">
-          {status}
+        <div className="mx-5 mb-4 px-4 py-2.5 rounded-lg" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}>
+          <p className="text-[11px] font-mono text-amber-700 dark:text-amber-400">{status}</p>
         </div>
       )}
     </div>

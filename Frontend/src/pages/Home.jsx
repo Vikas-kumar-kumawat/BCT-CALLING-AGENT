@@ -1,37 +1,56 @@
-import { PhoneCall, CreditCard, Sparkles, Headphones } from 'lucide-react'
+import { PhoneCall, CreditCard, Sparkles, Headphones, ArrowUpRight } from 'lucide-react'
+
+const modules = [
+  { id: 'feedback',  title: 'Feedback Calls',    icon: PhoneCall  },
+  { id: 'recharge',  title: 'Recharge Reminder', icon: CreditCard },
+  { id: 'promotion', title: 'Plan Promotion',     icon: Sparkles   },
+  { id: 'inbound',   title: 'Customer Support',  icon: Headphones },
+]
 
 export default function Home({ onNavigate }) {
-  const options = [
-    { id: 'feedback', label: 'FEEDBACK AGENT', icon: PhoneCall },
-    { id: 'recharge', label: 'RECHARGE REMINDER', icon: CreditCard },
-    { id: 'promotion', label: 'PLAN PROMOTION', icon: Sparkles },
-    { id: 'inbound', label: 'CUSTOMER SUPPORT IVR', icon: Headphones },
-  ]
-
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold text-white tracking-tight">DASHBOARD</h1>
+
+      {/* Page Header */}
+      <div className="pb-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <h1 style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)', fontSize: 'clamp(22px, 5vw, 28px)', fontWeight: 700, letterSpacing: '-0.02em' }}>
+          Command Center
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>
+          Select an AI module to start a campaign or manage support.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {options.map((opt) => {
-          const Icon = opt.icon
+      {/* Module Grid — 1 col on mobile, 2 col on md+ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {modules.map((mod) => {
+          const Icon = mod.icon
           return (
             <button
-              key={opt.id}
-              onClick={() => onNavigate(opt.id)}
-              className="bg-[#111215] hover:bg-[#17181c] border border-[#22242b] hover:border-[#323642] rounded-2xl p-6 text-left transition-all space-y-3 group cursor-pointer shadow-xl"
+              key={mod.id}
+              onClick={() => onNavigate(mod.id)}
+              className="cg-card-hover group text-left w-full cursor-pointer flex items-center justify-between"
+              style={{ padding: 'clamp(14px, 3vw, 20px)' }}
             >
-              <div className="flex items-center justify-between">
-                <Icon className="h-6 w-6 text-zinc-400 group-hover:text-emerald-400 transition-colors" />
-                <span className="text-xs font-bold text-zinc-400 group-hover:text-white transition-all">Launch →</span>
-              </div>
-              <div>
-                <h2 className="text-xs font-extrabold uppercase tracking-widest text-zinc-200 group-hover:text-emerald-400 transition-all">
-                  {opt.label}
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 group-hover:bg-[#e00000]"
+                  style={{ width: '40px', height: '40px', minWidth: '40px', background: 'rgba(224,0,0,0.08)', border: '1px solid rgba(224,0,0,0.12)' }}
+                >
+                  <Icon size={18} className="text-[#e00000] group-hover:text-white transition-colors duration-200" />
+                </div>
+                <h2
+                  className="font-semibold group-hover:text-[#e00000] transition-colors truncate"
+                  style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)', fontSize: 'clamp(14px, 3vw, 16px)' }}
+                >
+                  {mod.title}
                 </h2>
-                <p className="text-xs font-normal text-zinc-400 mt-1 leading-relaxed">{opt.desc}</p>
+              </div>
+              <div
+                className="rounded-md flex items-center justify-center transition-all duration-200 group-hover:bg-[#e00000] shrink-0 ml-2"
+                style={{ width: '32px', height: '32px', minWidth: '32px', background: 'var(--row-hover)', border: '1px solid var(--border-subtle)' }}
+              >
+                <ArrowUpRight size={14} style={{ color: 'var(--text-muted)' }} className="group-hover:text-white transition-colors" />
               </div>
             </button>
           )

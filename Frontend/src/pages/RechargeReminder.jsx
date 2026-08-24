@@ -44,12 +44,13 @@ export default function RechargeReminder() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-xl font-extrabold text-white tracking-tight">Recharge Reminder Bot</h1>
-        <p className="text-xs text-zinc-400 mt-1">Automated broadband plan expiry & payment link calls.</p>
+      <div className="pb-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <h1 style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }} className="text-3xl font-bold tracking-tight">
+          Recharge Reminder
+        </h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <RechargeCard 
           onCall={handleCall}
           onCancelCall={handleCancelCall}

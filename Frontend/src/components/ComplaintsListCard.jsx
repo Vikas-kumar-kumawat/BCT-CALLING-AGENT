@@ -1,8 +1,15 @@
 import { useState } from 'react'
+import { ChevronRight, Mic, Archive, X } from 'lucide-react'
+
+function StatusBadge({ status }) {
+  if (status === 'RESOLVED')    return <span className="badge-resolved">{status}</span>
+  if (status === 'IN PROGRESS') return <span className="badge-progress">{status}</span>
+  return <span className="badge-open">{status}</span>
+}
 
 export default function ComplaintsListCard({ complaints = [], onToggleStatus, onAddComplaint }) {
   const [showForm, setShowForm] = useState(false)
-  const [selectedTicket, setSelectedTicket] = useState(null)
+  const [selected, setSelected] = useState(null)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [issue, setIssue] = useState('')
@@ -11,245 +18,201 @@ export default function ComplaintsListCard({ complaints = [], onToggleStatus, on
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!issue) return
-    onAddComplaint({ customerName: name || 'Vikas', phone: phone || '9057262630', issue, category })
-    setName('')
-    setPhone('')
-    setIssue('')
+    onAddComplaint({ customerName: name || 'Customer', phone: phone || '9000000000', issue, category })
+    setName(''); setPhone(''); setIssue('')
     setShowForm(false)
   }
 
   return (
-    <div className="bg-[#111215] border border-[#22242b] rounded-2xl p-6 space-y-5 shadow-xl font-sans flex flex-col justify-between relative min-h-[580px]">
-      {/* Header */}
-      <div className="flex justify-between items-center border-b border-[#1c1e24] pb-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xs font-extrabold uppercase tracking-widest text-zinc-200">
-            Customer Complaints
-          </h2>
-          <span className="text-[10px] font-mono text-zinc-400 bg-[#17181c] border border-[#262832] px-2.5 py-0.5 rounded-md font-bold">
-            {complaints.length} TICKETS
-          </span>
+    <>
+      <div className="cg-card flex flex-col min-h-[540px] overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+          <div>
+            <p className="forbes-label-red mb-0.5">COMPLAINT CENTER</p>
+            <p style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }} className="font-bold text-lg leading-tight">
+              Customer Tickets
+              <span className="ml-2 text-sm font-normal" style={{ color: 'var(--text-muted)', fontFamily: "'Inter', sans-serif" }}>
+                {complaints.length} active
+              </span>
+            </p>
+          </div>
+          <button onClick={() => setShowForm(!showForm)} className={showForm ? 'btn-ghost' : 'btn-primary'}>
+            {showForm ? 'Cancel' : '+ Raise Ticket'}
+          </button>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className={`text-xs px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer border ${
-            showForm 
-              ? 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700' 
-              : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
-          }`}
-        >
-          {showForm ? 'CANCEL' : '+ RAISE TICKET'}
-        </button>
-      </div>
 
-      {/* New Complaint Form */}
-      {showForm && (
-        <form onSubmit={handleSubmit} className="p-4 bg-[#17181c] border border-[#262832] rounded-xl space-y-3 text-xs">
-          <div className="grid grid-cols-2 gap-3">
-            <input 
-              type="text" 
-              placeholder="Customer Name" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)}
-              className="bg-[#111215] border border-[#262832] text-white text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-white"
-            />
-            <input 
-              type="text" 
-              placeholder="Phone Number" 
-              value={phone} 
-              onChange={(e) => setPhone(e.target.value)}
-              className="bg-[#111215] border border-[#262832] text-white text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-white"
-            />
-          </div>
-          <input 
-            type="text" 
-            placeholder="Complaint Issue Description" 
-            value={issue} 
-            onChange={(e) => setIssue(e.target.value)}
-            className="w-full bg-[#111215] border border-[#262832] text-white text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-white"
-            required
-          />
-          <div className="flex justify-between items-center pt-1">
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="bg-[#111215] border border-[#262832] text-zinc-300 text-xs px-3 py-1.5 rounded-lg focus:outline-none"
-            >
-              <option value="Broadband Outage">Broadband Outage</option>
-              <option value="Speed & Latency">Speed & Latency</option>
-              <option value="Plan Change">Plan Change</option>
-              <option value="Billing Discrepancy">Billing Discrepancy</option>
-            </select>
-            <button 
-              type="submit"
-              className="px-4 py-1.5 text-xs font-bold bg-white text-black hover:bg-zinc-200 rounded-lg transition-colors cursor-pointer shadow-md"
-            >
-              Save Ticket
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* Ultra-Clean 2-Column Complaints Grid */}
-      <div className="flex-1 max-h-[560px] overflow-y-auto pr-1 custom-scrollbar">
-        {complaints.length === 0 ? (
-          <div className="text-zinc-500 text-xs text-center py-16 font-mono">No active complaints</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {complaints.map((item) => {
-              const isResolved = item.status === 'RESOLVED'
-              const isInProgress = item.status === 'IN PROGRESS'
-
-              return (
-                <div 
-                  key={item.id} 
-                  onClick={() => setSelectedTicket(item)}
-                  className="p-4 border border-[#262832] rounded-xl transition-all space-y-3 bg-[#17181c] flex flex-col justify-between cursor-pointer hover:border-zinc-500 shadow-sm"
-                >
-                  <div className="space-y-2">
-                    {/* Header Row */}
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] font-extrabold text-white bg-black/60 px-2 py-0.5 rounded border border-zinc-700">
-                          {item.id}
-                        </span>
-                        <span className="text-xs font-bold text-white truncate max-w-[130px]">
-                          {item.customerName}
-                        </span>
-                      </div>
-
-                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
-                        isResolved 
-                          ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
-                          : isInProgress 
-                          ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' 
-                          : 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-                      }`}>
-                        {item.status}
-                      </span>
-                    </div>
-
-                    {/* Issue Description */}
-                    <p className="text-xs text-zinc-300 leading-relaxed font-sans min-h-[36px]">
-                      "{item.issue}"
-                    </p>
-                  </div>
-
-                  {/* Footer Info */}
-                  <div className="pt-2 border-t border-[#22242b] flex items-center justify-between gap-2 text-[10px] font-mono text-zinc-400">
-                    <span>Phone: <strong className="text-white">{item.phone}</strong></span>
-                    <span className="text-zinc-400 hover:text-white font-bold transition-colors">Details →</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+        {/* Form */}
+        {showForm && (
+          <form onSubmit={handleSubmit} className="px-6 py-4 space-y-3" style={{ borderBottom: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.02)' }}>
+            <div className="grid grid-cols-2 gap-3">
+              <input className="cg-input" type="text" placeholder="Customer Name" value={name} onChange={e => setName(e.target.value)} />
+              <input className="cg-input" type="text" placeholder="Phone Number" value={phone} onChange={e => setPhone(e.target.value)} />
+            </div>
+            <input className="cg-input" type="text" placeholder="Describe the issue" value={issue} onChange={e => setIssue(e.target.value)} required />
+            <div className="flex items-center justify-between">
+              <select
+                value={category} onChange={e => setCategory(e.target.value)}
+                className="cg-input"
+                style={{ width: 'auto', padding: '7px 12px' }}
+              >
+                <option>Broadband Outage</option>
+                <option>Speed & Latency</option>
+                <option>Plan Change</option>
+                <option>Billing Discrepancy</option>
+              </select>
+              <button type="submit" className="btn-primary">Save Ticket</button>
+            </div>
+          </form>
         )}
+
+        {/* Column labels */}
+        <div className="grid grid-cols-12 px-6 py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.02)' }}>
+          <span className="col-span-2 forbes-label">Ticket ID</span>
+          <span className="col-span-2 forbes-label">Customer</span>
+          <span className="col-span-5 forbes-label">Issue</span>
+          <span className="col-span-2 forbes-label">Status</span>
+          <span className="col-span-1 forbes-label text-right">Act</span>
+        </div>
+
+        {/* Rows */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {complaints.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid var(--border-subtle)' }}>
+                <Mic size={16} style={{ color: 'var(--text-muted)' }} />
+              </div>
+              <p className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>No active complaints</p>
+            </div>
+          ) : complaints.map(item => {
+            const isOpen = item.status === 'OPEN'
+            const borderColor = isOpen ? '#e00000' : item.status === 'IN PROGRESS' ? '#f59e0b' : '#10b981'
+            return (
+              <div
+                key={item.id}
+                onClick={() => setSelected(item)}
+                className="grid grid-cols-12 px-6 py-4 items-center cursor-pointer transition-all duration-100"
+                style={{
+                  borderBottom: '1px solid var(--border-subtle)',
+                  borderLeft: `2px solid ${borderColor}`,
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.02)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <div className="col-span-2">
+                  <span className="text-[10px] font-mono font-bold" style={{ color: 'var(--text-muted)' }}>{item.id}</span>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{item.customerName}</p>
+                  <p className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{item.phone}</p>
+                </div>
+                <div className="col-span-5 pr-4">
+                  <p className="text-[12px] leading-snug line-clamp-2" style={{ color: 'var(--text-secondary)' }}>"{item.issue}"</p>
+                </div>
+                <div className="col-span-2">
+                  <StatusBadge status={item.status} />
+                </div>
+                <div className="col-span-1 flex justify-end" onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={() => setSelected(item)}
+                    className="p-1.5 rounded-md transition-all cursor-pointer"
+                    style={{ color: 'var(--text-muted)' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Clean Complaint Detail Modal */}
-      {selectedTicket && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#111215] border border-[#22242b] rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl font-sans">
-            {/* Modal Header */}
-            <div className="flex justify-between items-center border-b border-[#1c1e24] pb-3">
-              <div className="flex items-center gap-2.5">
-                <span className="font-mono text-xs font-extrabold text-white bg-black/60 px-2.5 py-0.5 rounded border border-zinc-700">
-                  {selectedTicket.id}
-                </span>
-                <h3 className="text-sm font-extrabold text-white">
-                  {selectedTicket.customerName}
-                </h3>
-                <span className="text-xs font-mono text-zinc-400">
-                  ({selectedTicket.phone})
-                </span>
-              </div>
+      {/* Detail Modal */}
+      {selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)' }}>
+          <div className="cg-card w-full max-w-2xl flex flex-col max-h-[90vh]">
 
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded border ${
-                  selectedTicket.status === 'RESOLVED' 
-                    ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
-                    : selectedTicket.status === 'IN PROGRESS' 
-                    ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' 
-                    : 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-                }`}>
-                  {selectedTicket.status}
-                </span>
+            {/* Modal Header */}
+            <div className="flex items-start justify-between px-6 py-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+              <div>
+                <p className="forbes-label-red mb-1">COMPLAINT DETAIL</p>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-[11px] font-mono font-bold" style={{ color: 'var(--text-muted)' }}>{selected.id}</span>
+                  <h3 style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }} className="font-bold text-xl leading-tight">
+                    {selected.customerName}
+                  </h3>
+                  <span className="text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>({selected.phone})</span>
+                </div>
+                <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                  {selected.category || 'Broadband Outage'} · {selected.createdAt}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <StatusBadge status={selected.status} />
                 <button
-                  onClick={() => setSelectedTicket(null)}
-                  className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition-colors text-sm font-bold cursor-pointer"
+                  onClick={() => setSelected(null)}
+                  className="p-1.5 rounded-full transition-colors cursor-pointer ml-1"
+                  style={{ color: 'var(--text-muted)' }}
                 >
-                  ✕
+                  <X size={16} />
                 </button>
               </div>
             </div>
 
-            {/* Conversation Log Transcript */}
-            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1.5 custom-scrollbar text-xs">
-              {/* Step 1: Greeting */}
-              <div className="flex flex-col items-start space-y-1">
-                <div className="text-[10px] font-mono text-zinc-400">VOICE AGENT • {selectedTicket.createdAt}</div>
-                <div className="bg-[#17181c] text-zinc-100 border border-[#262832] p-3 rounded-xl max-w-[90%] leading-relaxed">
-                  Welcome to BCT Support. For complaint press 1, for new connection press 2, for billing details press 3, for other support press 4.
-                </div>
+            {/* Transcript */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 custom-scrollbar">
+              <div className="flex items-center gap-2 mb-4">
+                <Archive size={11} style={{ color: 'var(--text-muted)' }} />
+                <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: 'var(--text-muted)' }}>IVR Session Transcript</span>
               </div>
 
-              {/* Step 2: Customer Key Press */}
-              <div className="flex flex-col items-end space-y-1">
-                <div className="text-[10px] font-mono text-zinc-400">{selectedTicket.customerName} (DTMF)</div>
-                <div className="bg-[#22242b] text-zinc-100 border border-[#323642] p-2.5 rounded-xl max-w-[85%] font-mono">
-                  Pressed Key [ 1: Broadband Complaint ]
-                </div>
-              </div>
-
-              {/* Step 3: Agent Prompt */}
-              <div className="flex flex-col items-start space-y-1">
-                <div className="text-[10px] font-mono text-zinc-400">VOICE AGENT</div>
-                <div className="bg-[#17181c] text-zinc-100 border border-[#262832] p-3 rounded-xl max-w-[90%] leading-relaxed">
-                  What is your complaint? Please state your issue.
-                </div>
-              </div>
-
-              {/* Step 4: Customer Voice Speech */}
-              <div className="flex flex-col items-end space-y-1">
-                <div className="text-[10px] font-mono text-zinc-400">{selectedTicket.customerName}</div>
-                <div className="bg-[#22242b] text-zinc-100 border border-[#323642] p-3 rounded-xl max-w-[90%] leading-relaxed">
-                  "{selectedTicket.issue}"
-                </div>
-              </div>
-
-              {/* Step 5: Resolution */}
-              <div className="flex flex-col items-start space-y-1">
-                <div className="text-[10px] font-mono text-zinc-400">VOICE AGENT</div>
-                <div className="bg-[#17181c] text-zinc-100 border border-[#262832] p-3 rounded-xl max-w-[90%] leading-relaxed">
-                  Thank you. We recorded your complaint. Complaint ticket #{selectedTicket.id} has been raised. Your issue will be solved within 2 hours.
-                </div>
-              </div>
+              {[
+                { sender: 'agent',    speaker: 'IVR SYSTEM',    text: 'Welcome to BCT Support. For complaint press 1, for new connection press 2, for billing details press 3, for other support press 4.' },
+                { sender: 'customer', speaker: `${selected.customerName} (DTMF)`, text: 'Pressed Key [ 1: Complaint Registration ]' },
+                { sender: 'agent',    speaker: 'VOICE AGENT',   text: 'What is your complaint? Please state your issue.' },
+                { sender: 'customer', speaker: selected.customerName, text: `"${selected.issue}"` },
+                { sender: 'agent',    speaker: 'VOICE AGENT',   text: 'Your complaint is registered and our technical team will reach you as soon as possible.' },
+              ].map((msg, i) => {
+                const isAgent = msg.sender === 'agent'
+                return (
+                  <div key={i} className={`flex flex-col ${isAgent ? 'items-start' : 'items-end'}`}>
+                    <span className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: isAgent ? '#e00000' : 'var(--text-muted)' }}>
+                      {msg.speaker}
+                    </span>
+                    <div
+                      className="max-w-[88%] px-4 py-3 rounded-2xl text-xs leading-relaxed"
+                      style={isAgent
+                        ? { background: 'rgba(224,0,0,0.04)', border: '1px solid rgba(224,0,0,0.12)', borderLeft: '2px solid #e00000', color: 'var(--text-primary)' }
+                        : { background: 'rgba(0,0,0,0.03)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }
+                      }
+                    >
+                      {msg.text}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
 
-            {/* Modal Actions */}
-            <div className="pt-3 border-t border-[#1c1e24] flex justify-between items-center">
+            {/* Modal Footer */}
+            <div className="px-6 py-4 flex items-center justify-between" style={{ borderTop: '1px solid var(--border-subtle)' }}>
               <button
                 onClick={() => {
-                  onToggleStatus(selectedTicket.id)
-                  const updatedStatus = selectedTicket.status === 'OPEN' ? 'IN PROGRESS' : selectedTicket.status === 'IN PROGRESS' ? 'RESOLVED' : 'OPEN'
-                  setSelectedTicket({ ...selectedTicket, status: updatedStatus })
+                  onToggleStatus(selected.id)
+                  const next = selected.status === 'OPEN' ? 'IN PROGRESS' : selected.status === 'IN PROGRESS' ? 'RESOLVED' : 'OPEN'
+                  setSelected({ ...selected, status: next })
                 }}
-                className="px-4 py-2 bg-white text-black hover:bg-zinc-200 text-xs font-extrabold rounded-xl transition-all cursor-pointer shadow-md"
+                className="btn-primary"
               >
-                Change Status ({selectedTicket.status === 'OPEN' ? 'IN PROGRESS' : selectedTicket.status === 'IN PROGRESS' ? 'RESOLVED' : 'OPEN'})
+                {selected.status === 'OPEN' ? 'Mark In Progress' : selected.status === 'IN PROGRESS' ? 'Mark Resolved' : 'Reopen Ticket'}
               </button>
-
-              <button
-                onClick={() => setSelectedTicket(null)}
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold rounded-xl border border-zinc-700 transition-all cursor-pointer"
-              >
-                Close
-              </button>
+              <button onClick={() => setSelected(null)} className="btn-ghost">Close</button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }

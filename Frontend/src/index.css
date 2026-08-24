@@ -1,26 +1,205 @@
 @import "tailwindcss";
 
+/* =====================================================
+   BCT AI — PREMIUM DESIGN SYSTEM
+   Light: UntitledUI SaaS Clean  |  Dark: Space Black
+   ===================================================== */
+
+/* ── LIGHT MODE ── */
+:root {
+  --bg-app:          #F2F4F7;
+  --bg-dot:          rgba(0,0,0,0.05);
+  --sidebar-bg:      #FFFFFF;
+  --sidebar-border:  #C8D0DC;
+  --cg-card-bg:      #FFFFFF;
+  --cg-card-border:  #C8D0DC;
+  --cg-card-shadow:  0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --cg-card-hover-border: #9AA5B4;
+  --cg-card-hover-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  --border-subtle:   #C8D0DC;
+  --text-primary:    #0D1117;
+  --text-secondary:  #344054;
+  --text-muted:      #667085;
+  --input-bg:        #FFFFFF;
+  --input-border:    #9AA5B4;
+  --row-hover:       #F2F4F7;
+  --framer-glow:     none;
+}
+
+/* ── DARK MODE ── */
+.dark {
+  --bg-app:          #020203;
+  --bg-dot:          rgba(255,255,255,0.07);
+  --sidebar-bg:      #080809;
+  --sidebar-border:  rgba(255,255,255,0.06);
+  --cg-card-bg:      #0D0D10;
+  --cg-card-border:  rgba(255,255,255,0.07);
+  --cg-card-shadow:  0 15px 40px rgba(0,0,0,0.7);
+  --cg-card-hover-border: rgba(255,255,255,0.18);
+  --cg-card-hover-shadow: 0 20px 40px -10px rgba(0,0,0,0.9), 0 0 25px -5px rgba(224,0,0,0.18);
+  --border-subtle:   rgba(255,255,255,0.06);
+  --text-primary:    #F2F4F7;
+  --text-secondary:  #98A2B3;
+  --text-muted:      #475467;
+  --input-bg:        #111114;
+  --input-border:    rgba(255,255,255,0.09);
+  --row-hover:       rgba(255,255,255,0.02);
+  --framer-glow:     radial-gradient(circle at 60% 40%, rgba(0,140,255,0.18) 0%, rgba(160,0,255,0.15) 30%, rgba(224,0,0,0.12) 60%, transparent 80%);
+}
+
 @layer base {
   body {
-    @apply bg-[#08090a] text-zinc-100 font-sans antialiased selection:bg-zinc-800 selection:text-white;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background: var(--bg-app);
+    color: var(--text-primary);
+    transition: background 0.25s ease, color 0.25s ease;
   }
+  ::selection { background: #e00000; color: #fff; }
 }
 
-/* Custom Sleek Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* =====================================================
+   AMBIENT GLOW — only in dark mode
+   ===================================================== */
+.framer-ambient-glow {
+  position: fixed;
+  top: 0; right: 0;
+  width: 60vw; height: 60vh;
+  background: var(--framer-glow);
+  filter: blur(70px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  transition: background 0.4s ease;
 }
 
-::-webkit-scrollbar-track {
-  background: #08090a;
+/* =====================================================
+   DOT GRID
+   ===================================================== */
+.bg-dot-grid {
+  background-image: radial-gradient(var(--bg-dot) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #1e2026;
-  border-radius: 4px;
+/* =====================================================
+   TYPOGRAPHY
+   ===================================================== */
+.forbes-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.forbes-label-red {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e00000;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #2b2e38;
+/* =====================================================
+   CARD SYSTEM
+   ===================================================== */
+.cg-card {
+  background: var(--cg-card-bg);
+  border: 1px solid var(--cg-card-border);
+  border-radius: 12px;
+  box-shadow: var(--cg-card-shadow);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
+
+.cg-card-hover {
+  background: var(--cg-card-bg);
+  border: 1px solid var(--cg-card-border);
+  border-radius: 12px;
+  box-shadow: var(--cg-card-shadow);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.cg-card-hover:hover {
+  border-color: var(--cg-card-hover-border);
+  box-shadow: var(--cg-card-hover-shadow);
+  transform: translateY(-1px);
+}
+
+/* =====================================================
+   BUTTONS
+   ===================================================== */
+.btn-primary {
+  background: #e00000;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(224,0,0,0.3);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-primary:hover { background: #c20000; box-shadow: 0 3px 10px rgba(224,0,0,0.3); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+.btn-ghost {
+  background: var(--cg-card-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--cg-card-border);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-ghost:hover {
+  color: var(--text-primary);
+  border-color: var(--cg-card-hover-border);
+  background: var(--row-hover);
+}
+
+/* =====================================================
+   INPUTS
+   ===================================================== */
+.cg-input {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  font-size: 13px;
+  padding: 9px 13px;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.cg-input::placeholder { color: var(--text-muted); }
+.cg-input:focus {
+  outline: none;
+  border-color: #e00000;
+  box-shadow: 0 0 0 3px rgba(224,0,0,0.08);
+}
+
+/* =====================================================
+   BADGES
+   ===================================================== */
+.badge-open     { color: #C01048; background: #FFF1F3; border: 1px solid #FECDD6; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+.badge-progress { color: #B54708; background: #FFFAEB; border: 1px solid #FEDF89; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+.badge-resolved { color: #027A48; background: #ECFDF3; border: 1px solid #ABEFC6; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+.badge-live     { color: #fff; background: #e00000; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+
+/* Dark mode badge overrides */
+.dark .badge-open     { color: #FDA29B; background: rgba(224,0,0,0.12); border-color: rgba(224,0,0,0.2); }
+.dark .badge-progress { color: #FEC84B; background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.2); }
+.dark .badge-resolved { color: #6CE9A6; background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.2); }
+
+/* =====================================================
+   SCROLLBAR
+   ===================================================== */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--cg-card-border); border-radius: 4px; }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getApiUrl } from '../api'
+import { Phone, Trash2, UserCircle2 } from 'lucide-react'
 
 export default function CustomerListCard({ onCall, onCancelCall, onSelectCustomer, selectedCustomerId, activeCallId, status }) {
   const [customers, setCustomers] = useState([])
@@ -9,173 +10,142 @@ export default function CustomerListCard({ onCall, onCancelCall, onSelectCustome
   const [newPhone, setNewPhone] = useState('')
   const [newFeedback, setNewFeedback] = useState('')
 
-  useEffect(() => {
-    fetchCustomers()
-  }, [])
+  useEffect(() => { fetchCustomers() }, [])
 
   const fetchCustomers = async () => {
     try {
       const res = await fetch(getApiUrl('/api/customers'))
-      if (!res.ok) throw new Error('Failed to fetch customers')
-      const data = await res.json()
-      setCustomers(data)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setIsLoading(false)
-    }
+      if (!res.ok) throw new Error('Failed')
+      setCustomers(await res.json())
+    } catch (err) { console.error(err) }
+    finally { setIsLoading(false) }
   }
 
   const handleAddSubmit = async (e) => {
     e.preventDefault()
     if (!newName || !newPhone) return
-    
     try {
-      const res = await fetch(getApiUrl('/api/customers'), {
+      await fetch(getApiUrl('/api/customers'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName, phone: newPhone, feedback: newFeedback || 'No feedback yet.' })
       })
-      if (!res.ok) throw new Error('Failed to add customer')
       fetchCustomers()
       setShowForm(false)
-      setNewName('')
-      setNewPhone('')
-      setNewFeedback('')
-    } catch (err) {
-      alert("Error adding customer: " + err.message)
-    }
+      setNewName(''); setNewPhone(''); setNewFeedback('')
+    } catch (err) { alert('Error: ' + err.message) }
   }
 
-  const handleDeleteCustomer = async (e, id) => {
+  const handleDelete = async (e, id) => {
     e.stopPropagation()
-    if (!confirm("Delete customer?")) return
+    if (!confirm('Delete customer?')) return
     try {
-      const res = await fetch(getApiUrl(`/api/customers/${id}`), { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete customer')
+      await fetch(getApiUrl(`/api/customers/${id}`), { method: 'DELETE' })
       fetchCustomers()
-    } catch (err) {
-      alert("Error deleting customer: " + err.message)
-    }
+    } catch (err) { alert('Error: ' + err.message) }
   }
 
   return (
-    <div className="bg-[#111215] border border-[#22242b] rounded-2xl p-6 space-y-4 shadow-xl font-sans h-full flex flex-col min-h-[580px]">
-      <div className="flex justify-between items-center border-b border-[#1c1e24] pb-3">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xs font-extrabold uppercase tracking-widest text-zinc-200">Customer Directory</h2>
-          <span className="text-[10px] font-mono text-zinc-400 bg-[#17181c] border border-[#262832] px-2.5 py-1 rounded-md font-bold">
-            {customers.length} ENTRIES
-          </span>
+    <div className="cg-card flex flex-col overflow-hidden" style={{ minHeight: '480px' }}>
+
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <div className="min-w-0 mr-3">
+          <p className="forbes-label-red mb-0.5">CUSTOMER DIRECTORY</p>
+          <p className="font-semibold text-sm truncate" style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }}>
+            Contact List <span className="font-mono font-normal text-xs ml-1" style={{ color: 'var(--text-muted)' }}>{customers.length}</span>
+          </p>
         </div>
-        <button 
-          onClick={() => setShowForm(!showForm)}
-          className={`text-[10px] px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer border ${
-            showForm 
-              ? 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700' 
-              : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
-          }`}
-        >
-          {showForm ? 'CANCEL' : '+ ADD NEW'}
+        <button onClick={() => setShowForm(!showForm)} className={`shrink-0 ${showForm ? 'btn-ghost' : 'btn-primary'}`} style={{ padding: '6px 12px', fontSize: '11px' }}>
+          {showForm ? 'Cancel' : '+ Add'}
         </button>
       </div>
 
+      {/* Add form */}
       {showForm && (
-        <form onSubmit={handleAddSubmit} className="p-4 bg-[#17181c] border border-[#262832] rounded-xl space-y-3 text-xs">
-          <div className="grid grid-cols-2 gap-2.5">
-            <input 
-              type="text" 
-              placeholder="Name" 
-              value={newName} 
-              onChange={(e) => setNewName(e.target.value)}
-              className="bg-[#111215] border border-[#262832] text-white text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-white"
-              required
-            />
-            <input 
-              type="text" 
-              placeholder="Phone" 
-              value={newPhone} 
-              onChange={(e) => setNewPhone(e.target.value)}
-              className="bg-[#111215] border border-[#262832] text-white text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-white"
-              required
-            />
+        <form onSubmit={handleAddSubmit} className="px-4 py-3 space-y-2.5" style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--row-hover)' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input className="cg-input" type="text" placeholder="Full Name" value={newName} onChange={e => setNewName(e.target.value)} required />
+            <input className="cg-input" type="tel" placeholder="Phone Number" value={newPhone} onChange={e => setNewPhone(e.target.value)} required />
           </div>
-          <input 
-            type="text" 
-            placeholder="Feedback" 
-            value={newFeedback} 
-            onChange={(e) => setNewFeedback(e.target.value)}
-            className="w-full bg-[#111215] border border-[#262832] text-white text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-white"
-          />
-          <div className="flex justify-end pt-1">
-            <button 
-              type="submit"
-              className="px-4 py-1.5 text-xs font-bold bg-white text-black hover:bg-zinc-200 rounded-lg transition-colors cursor-pointer shadow-md"
-            >
-              Save
-            </button>
+          <input className="cg-input" type="text" placeholder="Feedback note (optional)" value={newFeedback} onChange={e => setNewFeedback(e.target.value)} />
+          <div className="flex justify-end">
+            <button type="submit" className="btn-primary">Save</button>
           </div>
         </form>
       )}
 
-      {/* High-density, clickable customer list rows in strict B&W */}
-      <div className="space-y-2 flex-1 max-h-[520px] overflow-y-auto pr-1.5 custom-scrollbar">
+      {/* Column labels — simplified on mobile */}
+      <div className="grid px-4 py-2" style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--row-hover)', gridTemplateColumns: '1fr auto' }}>
+        <span className="forbes-label">Name / Phone</span>
+        <span className="forbes-label">Actions</span>
+      </div>
+
+      {/* Rows */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         {isLoading ? (
-          <div className="text-zinc-500 text-xs text-center py-10 font-mono">Loading directory...</div>
+          <div className="flex items-center justify-center py-12 text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+            Loading...
+          </div>
         ) : customers.length === 0 ? (
-          <div className="text-zinc-500 text-xs text-center py-10 font-mono">No customers found</div>
-        ) : customers.map((c) => {
-          const isSelected = selectedCustomerId === c.id || (activeCallId === c.id)
+          <div className="flex flex-col items-center justify-center py-12 gap-2">
+            <UserCircle2 size={28} style={{ color: 'var(--border-subtle)' }} />
+            <p className="text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>No customers yet</p>
+          </div>
+        ) : customers.map(c => {
+          const isActive = activeCallId === c.id
+          const isSelected = selectedCustomerId === c.id || isActive
 
           return (
-            <div 
-              key={c.id} 
-              onClick={() => onSelectCustomer && onSelectCustomer(c)}
-              className={`px-3.5 py-2.5 border rounded-xl transition-all flex items-center justify-between gap-3 cursor-pointer ${
-                activeCallId === c.id
-                  ? 'border-white bg-[#1c1d22] ring-1 ring-white/40' 
-                  : isSelected
-                  ? 'border-zinc-500 bg-[#17181c] ring-1 ring-zinc-500/40'
-                  : 'bg-[#17181c] border-[#262832] hover:border-zinc-600 hover:bg-[#1c1d22]'
-              }`}
+            <div
+              key={c.id}
+              onClick={() => onSelectCustomer?.(c)}
+              className="flex items-center px-4 py-3 cursor-pointer transition-all duration-100 gap-3"
+              style={{
+                borderBottom: '1px solid var(--border-subtle)',
+                borderLeft: `3px solid ${isActive ? '#e00000' : isSelected ? 'var(--text-muted)' : 'transparent'}`,
+                background: isActive ? 'rgba(224,0,0,0.04)' : isSelected ? 'var(--row-hover)' : 'transparent',
+              }}
             >
-              {/* Customer Info Inline */}
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSelected ? 'bg-white animate-pulse' : 'bg-zinc-600'}`}></span>
-                <span className={`text-xs font-semibold truncate max-w-[120px] sm:max-w-[150px] ${isSelected ? 'text-white font-bold' : 'text-zinc-200'}`}>
-                  {c.name}
-                </span>
-                <span className="text-zinc-500 font-mono text-[11px] shrink-0">{c['mobile-number']}</span>
-                {c.feedback && (
-                  <span className="text-zinc-300 text-[10px] bg-[#111215] px-2 py-0.5 rounded border border-zinc-800 truncate max-w-[160px] hidden sm:inline-block">
-                    {c.feedback}
-                  </span>
-                )}
+              {/* Avatar + info */}
+              <div className="flex-1 flex items-center gap-3 min-w-0">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white uppercase"
+                  style={{ background: isActive ? '#e00000' : 'var(--text-muted)' }}
+                >
+                  {c.name?.[0] || '?'}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{c.name}</p>
+                  <p className="text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>{c['mobile-number']}</p>
+                </div>
               </div>
 
-              {/* Actions Inline */}
-              <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+              {/* Actions */}
+              <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
                 <button
                   onClick={() => onCall({ ...c, phone: c['mobile-number'] })}
                   disabled={activeCallId && activeCallId !== c.id}
-                  className="bg-white hover:bg-zinc-200 text-black font-extrabold py-1 px-3 rounded-lg transition-all text-xs tracking-wide shadow-md active:scale-98 cursor-pointer disabled:opacity-40"
+                  className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-md transition-all cursor-pointer disabled:opacity-25"
+                  style={isActive
+                    ? { color: '#e00000', border: '1px solid rgba(224,0,0,0.3)', background: 'rgba(224,0,0,0.05)' }
+                    : { color: 'var(--text-muted)', border: '1px solid var(--border-subtle)', background: 'transparent' }
+                  }
                 >
-                  {activeCallId === c.id ? 'Calling...' : 'Call'}
+                  <Phone size={10} />
+                  <span className="hidden sm:inline">{isActive ? 'Live' : 'Call'}</span>
                 </button>
-                {activeCallId === c.id && onCancelCall && (
+                {isActive && onCancelCall && (
                   <button
                     onClick={() => onCancelCall()}
-                    className="bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-1 px-2.5 rounded-lg border border-zinc-700 transition-all text-xs cursor-pointer shadow-md"
+                    className="text-[10px] font-bold uppercase px-2 py-1.5 rounded-md cursor-pointer"
+                    style={{ color: 'var(--text-muted)', border: '1px solid var(--border-subtle)' }}
                   >
                     Stop
                   </button>
                 )}
-                <button
-                  onClick={(e) => handleDeleteCustomer(e, c.id)}
-                  title="Delete Customer"
-                  className="text-zinc-500 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer text-xs font-bold"
-                >
-                  ✕
+                <button onClick={(e) => handleDelete(e, c.id)} className="p-1.5 rounded-md cursor-pointer hover:text-[#e00000] transition-colors" style={{ color: 'var(--text-muted)' }}>
+                  <Trash2 size={13} />
                 </button>
               </div>
             </div>
