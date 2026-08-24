@@ -1,4 +1,14 @@
 require('dotenv').config()
+
+// ── Startup: validate required environment variables ──
+const REQUIRED_ENV = ['ELEVENLABS_API_KEY', 'GEMINI_API_KEY', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY']
+const missing = REQUIRED_ENV.filter(k => !process.env[k])
+if (missing.length > 0) {
+  console.error('[ENV ERROR] Missing required environment variables:', missing.join(', '))
+  console.error('[ENV ERROR] Set these in your Render dashboard → Environment tab, or in your .env file locally.')
+} else {
+  console.log('[ENV] All required environment variables are loaded ✓')
+}
 const express = require('express')
 const cors = require('cors')
 const path = require('path')

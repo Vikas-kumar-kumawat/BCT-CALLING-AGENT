@@ -5,5 +5,26 @@ services:
     plan: free
     buildCommand: npm run build
     startCommand: npm start
+    envVars:
       - key: NODE_ENV
         value: production
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_VOICE_ID
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SIP_SERVER_IP
+        sync: false
+      - key: SIP_USERNAME
+        sync: false
+      - key: SIP_PASSWORD
+        sync: false
+      - key: SIP_PORT
+        value: "5060"
