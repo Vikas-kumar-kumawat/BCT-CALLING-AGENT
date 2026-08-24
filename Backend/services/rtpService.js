@@ -29,18 +29,19 @@ function streamAudio(ulawBuffer, remoteIp, remotePort, socket) {
       return resolve();
     }
 
-    const FRAME    = 160;   // 20ms at 8000Hz = 160 samples/bytes (u-law is 1 byte/sample)
-    const INTERVAL = 20;    // ms between packets
+    const FRAME    = 160;
+    const INTERVAL = 20;
     const ssrc     = (Math.random() * 0xFFFFFFFF) >>> 0;
     let seq        = (Math.random() * 0xFFFF) >>> 0;
     let ts         = 0;
     let offset     = 0;
+    let closed     = false;
     const total    = Math.ceil(ulawBuffer.length / FRAME);
 
     console.log(`[RTP] Streaming to ${remoteIp}:${remotePort} — ${total} packets (~${(ulawBuffer.length / 8000).toFixed(1)}s)`);
 
     function sendFrame() {
-      if (offset >= ulawBuffer.length) {
+      if (closed || offset >= ulawBuffer.length) {
         console.log('[RTP] Audio complete ✓');
         return resolve();
       }
@@ -51,9 +52,17 @@ function streamAudio(ulawBuffer, remoteIp, remotePort, socket) {
       const pkt = Buffer.concat([rtpHeader(seq++, ts, ssrc), payload]);
       ts += FRAME;
 
-      socket.send(pkt, 0, pkt.length, remotePort, remoteIp, (err) => {
-        if (err) console.warn('[RTP] Send error:', err.message);
-      });
+      try {
+        socket.send(pkt, 0, pkt.length, remotePort, remoteIp, (err) => {
+          if (err) {
+            closed = true;
+            return resolve(); // socket closed, end gracefully
+          }
+        });
+      } catch (e) {
+        closed = true;
+        return resolve();
+      }
 
       setTimeout(sendFrame, INTERVAL);
     }

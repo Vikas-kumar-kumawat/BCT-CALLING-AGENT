@@ -1,19 +1,10 @@
-/**
- * audioService.js - Converts local MP3 to G.711 u-law for RTP streaming
- * Uses ffmpeg (available on this machine) to decode MP3 → raw u-law 8kHz mono
- * Includes in-memory caching to avoid repeated ffmpeg process spawning.
- */
+
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
 const audioCache = new Map();
 
-/**
- * Convert a local MP3 file to raw G.711 u-law bytes (8kHz, mono)
- * Returns a Buffer ready to feed directly into rtpService.streamAudio()
- * Caches converted buffer in memory for instant subsequent playback.
- */
 function getLocalAudio(filename) {
   if (audioCache.has(filename)) {
     console.log(`[Audio Cache] Returning pre-converted u-law buffer for ${filename}`);
@@ -39,7 +30,7 @@ function getLocalAudio(filename) {
     ]);
 
     ff.stdout.on('data', chunk => chunks.push(chunk));
-    ff.stderr.on('data', () => {}); // suppress ffmpeg progress spam
+    ff.stderr.on('data', () => { }); // suppress ffmpeg progress spam
 
     ff.on('close', (code) => {
       if (chunks.length === 0) {
@@ -55,9 +46,9 @@ function getLocalAudio(filename) {
   });
 }
 
-/**
- * Clear in-memory audio cache if needed.
- */
+
+
+
 function clearAudioCache() {
   audioCache.clear();
   console.log('[Audio Cache] Cache cleared');

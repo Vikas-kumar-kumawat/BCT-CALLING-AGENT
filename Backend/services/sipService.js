@@ -226,7 +226,17 @@ async function doInvite(socket, localIp, localPort, serverIp, serverPort, sipUse
   }));
   console.log('[SIP] ACK sent ✓');
 
-  return { rtpIp: rtpInfo.ip || serverIp, rtpPort: rtpInfo.port || 10000 };
+  return { 
+    rtpIp: rtpInfo.ip || serverIp, 
+    rtpPort: rtpInfo.port || 10000,
+    invCallId,
+    fromTag,
+    toWithTag,
+    toUri,
+    fromUri,
+    localIp,
+    localPort
+  };
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -240,8 +250,8 @@ async function makeSipCall(targetPhone) {
 
   const listeners = {};
 
-  const socket = dgram.createSocket('udp4');
-  socket.on('message', (msg) => {
+  const sipSocket = dgram.createSocket('udp4');
+  sipSocket.on('message', (msg) => {
     const rs = parseResponse(msg);
     if (!rs) return;
     const cid = rs.headers['call-id'];
@@ -253,19 +263,45 @@ async function makeSipCall(targetPhone) {
     }
   });
 
-  await new Promise((res, rej) => socket.bind(0, (err) => err ? rej(err) : res()));
-  const localPort = socket.address().port;
+  // Dedicated RTP socket on port 15000 (matches SDP m=audio 15000)
+  const rtpSocket = dgram.createSocket('udp4');
+
+  await new Promise((res, rej) => sipSocket.bind(0, (err) => err ? rej(err) : res()));
+  const localPort = sipSocket.address().port;
   console.log(`[SIP] Socket bound → ${localIp}:${localPort}`);
 
+  await new Promise((res, rej) => rtpSocket.bind(15000, (err) => err ? rej(err) : res()));
+  console.log(`[RTP] Listening on port 15000 for incoming customer audio`);
+
   try {
-    await doRegister(socket, localIp, localPort, serverIp, serverPort, sipUser, sipPass, listeners);
-    const rtpInfo = await doInvite(socket, localIp, localPort, serverIp, serverPort, sipUser, sipPass, targetPhone, listeners);
+    await doRegister(sipSocket, localIp, localPort, serverIp, serverPort, sipUser, sipPass, listeners);
+    const rtpInfo = await doInvite(sipSocket, localIp, localPort, serverIp, serverPort, sipUser, sipPass, targetPhone, listeners);
 
-    setTimeout(() => { try { socket.close(); } catch (_) {} }, 120000);
+    const autoCloseTimer = setTimeout(() => {
+      try { sipSocket.close(); } catch (_) {}
+      try { rtpSocket.close(); } catch (_) {}
+    }, 120000);
 
-    return { ...rtpInfo, socket };
+    const endCall = async () => {
+      try {
+        await udpSend(sipSocket, serverIp, serverPort, buildSip('BYE', rtpInfo.toUri, {
+          'Via'          : `SIP/2.0/UDP ${rtpInfo.localIp}:${rtpInfo.localPort};rport;branch=${branch()}`,
+          'From'         : `<${rtpInfo.fromUri}>;tag=${rtpInfo.fromTag}`,
+          'To'           : rtpInfo.toWithTag,
+          'Call-ID'      : rtpInfo.invCallId,
+          'CSeq'         : '3 BYE',
+          'Max-Forwards' : '70'
+        }));
+        console.log('[SIP] BYE sent ✓');
+      } catch (e) {
+        console.warn('[SIP] Failed to send BYE:', e.message);
+      }
+    };
+
+    return { ...rtpInfo, socket: sipSocket, rtpSocket, endCall };
   } catch (err) {
-    try { socket.close(); } catch (_) {}
+    try { sipSocket.close(); } catch (_) {}
+    try { rtpSocket.close(); } catch (_) {}
     throw err;
   }
 }

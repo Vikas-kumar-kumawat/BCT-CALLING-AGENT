@@ -1,5 +1,5 @@
 /**
- * controllers/supportAgent/index.js - Central Router & Dispatcher
+ * controllers/supportAgent/index.js - Support Agent IVR Handlers & Dispatcher
  */
 const { handleComplaint } = require('./complaintHandler');
 const { handleNewConnection } = require('./newConnectionHandler');

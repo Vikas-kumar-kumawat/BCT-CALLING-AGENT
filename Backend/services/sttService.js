@@ -9,55 +9,84 @@ const path = require('path');
 const { spawn } = require('child_process');
 
 /**
- * Transcribe raw G.711 u-law audio buffer or audio file into text string.
- * @param {Buffer|string} audioInput - Audio Buffer or file path
- * @returns {Promise<string>} Transcribed text string
+ * Convert raw u-law buffer → PCM WAV using ffmpeg
+ */
+function ulawToPcmWav(ulawBuffer) {
+  return new Promise((resolve, reject) => {
+    const chunks = []
+    const ff = spawn('ffmpeg', [
+      '-f', 'mulaw',      // input format: raw u-law
+      '-ar', '8000',      // sample rate 8kHz
+      '-ac', '1',         // mono
+      '-i', 'pipe:0',     // read from stdin
+      '-f', 'wav',        // output: WAV container (PCM)
+      '-ar', '16000',     // upsample to 16kHz for better STT accuracy
+      'pipe:1'            // write to stdout
+    ])
+    ff.stdin.write(ulawBuffer)
+    ff.stdin.end()
+    ff.stdout.on('data', c => chunks.push(c))
+    ff.stderr.on('data', () => { })
+    ff.on('close', code => {
+      if (chunks.length === 0) return reject(new Error(`ffmpeg failed (${code})`))
+      resolve(Buffer.concat(chunks))
+    })
+    ff.on('error', reject)
+  })
+}
+
+/**
+ * Transcribe raw G.711 u-law audio buffer into text string via Google Gemini API.
  */
 async function transcribeAudio(audioInput) {
-  const sarvamApiKey = process.env.SARVAM_API_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY
 
   try {
-    let wavBuffer;
+    let wavBuffer
 
-    if (typeof audioInput === 'string' && fs.existsSync(audioInput)) {
-      wavBuffer = fs.readFileSync(audioInput);
-    } else if (Buffer.isBuffer(audioInput)) {
-      wavBuffer = audioInput;
+    if (Buffer.isBuffer(audioInput) && audioInput.length > 0) {
+      console.log(`[STT] Converting ${audioInput.length} bytes u-law → PCM WAV via ffmpeg...`)
+      wavBuffer = await ulawToPcmWav(audioInput)
+    } else {
+      console.warn('[STT] Empty or invalid audio — skipping transcription.')
+      return "(No audio captured - RTP port blocked or customer silent)"
     }
 
-    // Try Sarvam AI Speech-to-Text if API key is present
-    if (sarvamApiKey && wavBuffer) {
-      console.log('[STT] Transcribing audio with Sarvam AI STT...');
-      const formData = new FormData();
-      const blob = new Blob([wavBuffer], { type: 'audio/wav' });
-      formData.append('file', blob, 'recording.wav');
-      formData.append('model', 'saaras:v1');
+    console.log('[STT] Sending to Free Google Web Speech API (via Python)...')
+    
+    // Save to temp file
+    const tmpFile = path.join(__dirname, `tmp_audio_${Date.now()}.wav`)
+    fs.writeFileSync(tmpFile, wavBuffer)
 
-      const response = await fetch('https://api.sarvam.ai/speech-to-text', {
-        method: 'POST',
-        headers: {
-          'api-subscription-key': sarvamApiKey
-        },
-        body: formData
-      });
+    try {
+      const { execSync } = require('child_process')
+      const pyScript = path.join(__dirname, 'python_stt.py')
+      const out = execSync(`python "${pyScript}" "${tmpFile}"`, { encoding: 'utf-8' }).trim()
+      
+      // Cleanup temp file
+      try { fs.unlinkSync(tmpFile) } catch(e){}
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.transcript) {
-          console.log(`[STT Success] Transcript: "${data.transcript}"`);
-          return data.transcript;
-        }
+      if (out.startsWith('ERROR:')) {
+        console.warn(`[STT API Error] ${out}`)
+        return `(STT Error: ${out})`
+      } else if (out) {
+        console.log(`[STT Success] "${out}"`)
+        return out
       } else {
-        console.warn(`[STT Sarvam Warning] Status ${response.status}`);
+        console.warn(`[STT Warning] Empty transcription returned`)
+        return "(STT: No speech detected)"
       }
+    } catch (err) {
+      try { fs.unlinkSync(tmpFile) } catch(e){}
+      console.warn('[STT Error]', err.message)
+      return `(STT Execution Error: ${err.message})`
     }
   } catch (err) {
-    console.warn('[STT Warning]', err.message);
+    console.warn('[STT Error]', err.message)
+    return `(STT Exception: ${err.message})`
   }
 
-  // Smart fallback transcription if audio input is empty or API unavailable
-  console.log('[STT Fallback] Using default speech-to-text result');
-  return "My internet connection is very slow and dropping frequently.";
+  return "(STT Failed to return transcript)"
 }
 
 /**

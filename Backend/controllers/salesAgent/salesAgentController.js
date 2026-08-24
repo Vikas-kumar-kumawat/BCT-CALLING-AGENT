@@ -61,3 +61,16 @@ function getLogs(req, res) {
 }
 
 module.exports = { startCall, getLogs }
+
+
+
+
+
+// algorithm
+
+
+//  1. if existing user--> convence for high speed internet and ott service or new offers.
+//  2. if new user -->  convence for taking our services and take new connection.
+
+// 3. redirect to new connection handlar.
+

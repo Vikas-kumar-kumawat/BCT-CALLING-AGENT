@@ -6,6 +6,7 @@ const fs = require('fs')
 const feedbackCallsRouter = require('./routes/feedbackcalls')
 const supportRouter = require('./routes/supportRouter')
 const salesAgentRouter = require('./routes/salesAgentRouter')
+const customersRouter = require('./routes/customersRouter')
 // const rechargereminderRouter = require('./routes/rechargereminderRouter')
 // const promotionRouter = require('./routes/promotionRouter')
 const { startTunnel } = require('./config/tunnel')
@@ -40,6 +41,7 @@ app.use('/audio', express.static(path.join(__dirname, 'audio'), {
 app.use('/api/feedbackcalls', feedbackCallsRouter)
 app.use('/api/support', supportRouter)
 app.use('/api/salesagent', salesAgentRouter)
+app.use('/api/customers', customersRouter)
 // app.use('/api/rechargereminder', rechargereminderRouter)
 // app.use('/api/promotion', promotionRouter)
 
@@ -57,6 +59,8 @@ if (fs.existsSync(frontendDist)) {
 } else {
   app.get('/', (req, res) => res.send('BCT Voice AI Backend Running'))
 }
+
+
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`)

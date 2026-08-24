@@ -21,3 +21,25 @@ async function handleNewConnection(params = {}) {
 }
 
 module.exports = { handleNewConnection };
+
+
+
+
+
+// algorithm
+
+
+// 1.  confirm the user come from outbound call or inbound call.
+
+// 2. take user details(name, address, pincode)
+
+// 3. confirm the user plan --> send plans to user on whatsapp. 
+
+// 4. confirm the plan.
+
+// 5. create a new connection ticket on our crm/dashboard.
+
+// 6. say to customer that your connection will me made in 24 hours.
+
+
+

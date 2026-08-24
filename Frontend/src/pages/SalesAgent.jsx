@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import CustomerCard from './components/CustomerCard'
-import ConversationStream from './components/ConversationStream'
-import { useConversation } from './hooks/useConversation'
-import { getApiUrl } from './api'
+import CustomerCard from '../components/CustomerCard'
+import ConversationStream from '../components/ConversationStream'
+import { useConversation } from '../hooks/useConversation'
+import { getApiUrl } from '../api'
 
 export default function SalesAgent() {
   const [loading, setLoading] = useState(false)

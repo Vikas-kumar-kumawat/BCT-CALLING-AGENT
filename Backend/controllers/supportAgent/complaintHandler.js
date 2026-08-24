@@ -1,48 +1,73 @@
 /**
  * Option 1: Complaint Registration Handler
+ * 1. Ask user: "What is your complaint?"
+ * 2. Capture customer speech and transcribe via STT
+ * 3. Respond: "Your complaint is registered and our technical team will reach you as soon as possible."
  */
 const { transcribeAudio, captureRtpAudio } = require('../../services/sttService');
+const { generateSpeechAudio } = require('../../services/elevenlabsService');
+
+
+
 
 async function handleComplaint(params = {}) {
+
   const { callerId, dtmfKey, context } = params;
   const socket = context ? context.socket : null;
   const customerAudio = context ? context.customerAudio : null;
 
-  console.log(`[Complaint Handler] Option 1 selected by ${callerId || 'Customer'}`);
+  console.log(`[Complaint Handler] Option 1 (Complaint) selected by ${callerId || 'Customer'}`);
 
+  // Step 1: Prompt customer to state their complaint
   const promptText = "What is your complaint? Please state your issue.";
 
+  // Step 2: Capture customer speech buffer & transcribe
   let audioBuffer = customerAudio;
   if (!audioBuffer && socket) {
-    console.log('[Complaint Handler] Capturing customer RTP audio...');
-    audioBuffer = await captureRtpAudio(socket, 4000);
+    console.log('[Complaint Handler] Capturing customer audio for 2.5 seconds...');
+    audioBuffer = await captureRtpAudio(socket, 2500);
   }
 
-  const complaintTranscript = await transcribeAudio(audioBuffer);
+  const complaintTranscript = audioBuffer ? await transcribeAudio(audioBuffer) : null;
+  const recordedIssue = complaintTranscript || 'Broadband service interruption reported via IVR';
 
-  const ticketNumber = `COMP-${Math.floor(1000 + Math.random() * 9000)}`;
+  // Step 3: Register ticket & generate confirmation response
+  const ticketNumber = `TKT-${Math.floor(1000 + Math.random() * 9000)}`;
   const ticketDetails = {
     ticketId: ticketNumber,
     callerId: callerId || 'Customer',
-    issueDescription: complaintTranscript,
+    issueDescription: recordedIssue,
     status: 'OPEN',
     resolutionSLA: '2 hours',
     createdAt: new Date().toISOString()
   };
 
-  const responseText = `Thank you. We recorded your complaint: "${complaintTranscript}". Complaint ticket #${ticketNumber} has been raised. Your issue will be solved within 2 hours.`;
+  const responseText = "Your complaint is registered and our technical team will reach you as soon as possible.";
 
-  console.log(`[Ticket Raised] #${ticketNumber} | SLA: 2 Hours | Issue: "${complaintTranscript}"`);
+  console.log(`[Complaint Registered] #${ticketNumber} | Issue: "${recordedIssue}"`);
+
+  // Optionally pre-generate or fetch ElevenLabs audio filename
+  let audioFilename = 'audio24.mp3';
+  try {
+    const ttsFilename = await generateSpeechAudio(responseText);
+    if (ttsFilename) audioFilename = ttsFilename;
+  } catch (e) {
+    console.warn('[Complaint Audio Warning]', e.message);
+  }
 
   return {
     option: '1',
     title: 'Complaint Registration',
     prompt: promptText,
     text: responseText,
-    transcript: complaintTranscript,
+    transcript: recordedIssue,
     data: ticketDetails,
-    audioFile: 'audio24.mp3'
+    audioFile: audioFilename
   };
 }
+
+
+
+
 
 module.exports = { handleComplaint };

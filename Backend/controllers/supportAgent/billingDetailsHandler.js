@@ -22,3 +22,12 @@ async function handleBillingDetails(params = {}) {
 }
 
 module.exports = { handleBillingDetails };
+
+
+
+
+// algorithm
+
+// 1.search user in databases by caller id
+// 2.search user recharge details.
+// 3.send user the recharege status to user
