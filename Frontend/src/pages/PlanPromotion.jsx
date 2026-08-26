@@ -44,10 +44,9 @@ export default function PlanPromotion() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="pb-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <h1 style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }} className="text-3xl font-bold tracking-tight">
-          Plan Promotion
-        </h1>
+      <div className="space-y-1 pb-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <p style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)' }}>Outbound Campaign</p>
+        <h1 style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--text-primary)', fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 900, letterSpacing: '-0.03em' }}>Plan Promotion</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

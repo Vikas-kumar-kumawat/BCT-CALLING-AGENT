@@ -1,54 +1,32 @@
-const fs = require('fs')
-const path = require('path')
+// elevenlabsService.js – TTS via ElevenLabs API with on-disk caching
+const fs     = require('fs')
+const path   = require('path')
 const crypto = require('crypto')
 
-async function generateSpeechAudio(text, options = {}) {
+const AUDIO_DIR = path.join(__dirname, '../audio')
+const VOICE_ID  = 'EXAVITQu4vr4xnSDxMaL' // Bella – reliable fallback
+
+async function generateSpeechAudio(text, { voiceId = VOICE_ID } = {}) {
   const apiKey = process.env.ELEVENLABS_API_KEY
-  const defaultVoiceId = process.env.ELEVENLABS_VOICE_ID || 'EXAVITQu4vr4xnSDxMaL'
-  const voiceId = options.voiceId || defaultVoiceId
+  if (!apiKey) return null
 
-  if (!apiKey) {
-    console.warn('[ElevenLabs] No API key configured.')
-    return null
-  }
+  const hash     = crypto.createHash('md5').update(`${voiceId}_${text}`).digest('hex')
+  const filepath = path.join(AUDIO_DIR, `eleven_${hash}.mp3`)
+  if (fs.existsSync(filepath)) return `eleven_${hash}.mp3`
 
-  const hash = crypto.createHash('md5').update(`${voiceId}_${text}`).digest('hex')
-  const audioDir = path.join(__dirname, '../audio')
-  if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir, { recursive: true })
-  const filename = `eleven_${hash}.mp3`
-  const filepath = path.join(audioDir, filename)
-
-  if (fs.existsSync(filepath)) {
-    console.log(`[ElevenLabs TTS] Using stored audio: ${filename}`)
-    return filename
-  }
+  if (!fs.existsSync(AUDIO_DIR)) fs.mkdirSync(AUDIO_DIR, { recursive: true })
 
   try {
-    console.log(`[ElevenLabs TTS] Generating: "${text.slice(0, 60)}"`)
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
       headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-      })
+      body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2',
+        voice_settings: { stability: 0.5, similarity_boost: 0.75 } })
     })
-
-    if (!response.ok) {
-      const errBody = await response.text()
-      console.error('[ElevenLabs API Error]', response.status, errBody)
-      return null
-    }
-
-    const arrayBuffer = await response.arrayBuffer()
-    fs.writeFileSync(filepath, Buffer.from(arrayBuffer))
-    console.log(`[ElevenLabs TTS] Generated: ${filename}`)
-    return filename
-  } catch (err) {
-    console.error('[ElevenLabs Error]', err.message)
-    return null
-  }
+    if (!res.ok) { console.error('[ElevenLabs]', res.status, await res.text()); return null }
+    fs.writeFileSync(filepath, Buffer.from(await res.arrayBuffer()))
+    return `eleven_${hash}.mp3`
+  } catch (e) { console.error('[ElevenLabs]', e.message); return null }
 }
 
 module.exports = { generateSpeechAudio }

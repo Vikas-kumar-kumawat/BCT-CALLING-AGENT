@@ -54,11 +54,12 @@ export default function InboundCalls() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
 
-      {/* Clean Header Bar with Inline Micro IVR Keys */}
-      <div className="pb-4 flex items-center justify-between flex-wrap gap-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <h1 style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }} className="text-3xl font-bold tracking-tight">
-          Customer Support
-        </h1>
+      {/* Header */}
+      <div className="pb-5 flex items-start justify-between flex-wrap gap-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <div className="space-y-1">
+          <p style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)' }}>Inbound IVR</p>
+          <h1 style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--text-primary)', fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 900, letterSpacing: '-0.03em' }}>Customer Support</h1>
+        </div>
         <SupportIVRCard activeOption={activeOption} onSelectOption={handleSelectOption} />
       </div>
 

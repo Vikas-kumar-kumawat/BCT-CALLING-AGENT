@@ -1,25 +1,25 @@
 export default function SupportIVRCard({ activeOption, onSelectOption }) {
   const opts = [
-    { key: '1', label: '1 · Complaint' },
-    { key: '2', label: '2 · New Conn' },
-    { key: '3', label: '3 · Billing' },
-    { key: '4', label: '4 · Support' },
+    { key: '1', label: 'Complaint' },
+    { key: '2', label: 'New Conn'  },
+    { key: '3', label: 'Billing'   },
+    { key: '4', label: 'Support'   },
   ]
   return (
-    <div className="flex items-center gap-2">
-      <span className="forbes-label pr-1">DTMF:</span>
-      <div className="flex gap-1.5">
+    <div className="flex items-center gap-2 flex-wrap">
+      <span style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>DTMF</span>
+      <div className="flex gap-1.5 flex-wrap">
         {opts.map(o => (
-          <button
-            key={o.key}
-            onClick={() => onSelectOption(o.key)}
-            className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-md transition-all cursor-pointer"
-            style={activeOption === o.key
-              ? { background: '#e00000', color: '#fff', border: '1px solid #e00000' }
-              : { color: 'var(--text-muted)', border: '1px solid var(--border-subtle)', background: 'transparent' }
-            }
-          >
-            {o.label}
+          <button key={o.key} onClick={() => onSelectOption(o.key)}
+            className="transition-all cursor-pointer"
+            style={{
+              fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em',
+              padding: '5px 10px', borderRadius: '8px',
+              ...(activeOption === o.key
+                ? { background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)', boxShadow: '0 4px 14px rgba(232,96,46,0.35)' }
+                : { background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)' })
+            }}>
+            {o.key} · {o.label}
           </button>
         ))}
       </div>

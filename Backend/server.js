@@ -1,39 +1,27 @@
 require('dotenv').config()
 
-// ── Startup: validate required environment variables ──
 const REQUIRED_ENV = ['ELEVENLABS_API_KEY', 'GEMINI_API_KEY', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY']
 const missing = REQUIRED_ENV.filter(k => !process.env[k])
-if (missing.length > 0) {
-  console.error('[ENV ERROR] Missing required environment variables:', missing.join(', '))
-  console.error('[ENV ERROR] Set these in your Render dashboard → Environment tab, or in your .env file locally.')
-} else {
-  console.log('[ENV] All required environment variables are loaded ✓')
-}
+if (missing.length > 0) console.error('[ENV ERROR] Missing required:', missing.join(', '))
+else console.log('[ENV] Required vars loaded ✓')
+
 const express = require('express')
 const cors = require('cors')
 const path = require('path')
 const fs = require('fs')
-const feedbackCallsRouter = require('./routes/feedbackcalls')
-const supportRouter = require('./routes/supportRouter')
-const salesAgentRouter = require('./routes/salesAgentRouter')
-const customersRouter = require('./routes/customersRouter')
-// const rechargereminderRouter = require('./routes/rechargereminderRouter')
-// const promotionRouter = require('./routes/promotionRouter')
-const { startTunnel } = require('./config/tunnel')
 
 const app = express()
 const port = process.env.PORT || 8000
 
-// Middlewares
+
+
+
 app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Bypass-Tunnel-Reminder']
 }))
-
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-
 app.use((req, res, next) => {
   res.header('Bypass-Tunnel-Reminder', 'true')
   res.header('Access-Control-Allow-Origin', '*')
@@ -41,42 +29,38 @@ app.use((req, res, next) => {
 })
 
 app.use('/audio', express.static(path.join(__dirname, 'audio'), {
-  setHeaders: (res) => {
-    res.set('Content-Type', 'audio/mpeg')
-    res.set('Bypass-Tunnel-Reminder', 'true')
-  }
+  setHeaders: res => { res.set('Content-Type', 'audio/mpeg'); res.set('Bypass-Tunnel-Reminder', 'true') }
 }))
 
-// API Routes
-app.use('/api/feedbackcalls', feedbackCallsRouter)
-app.use('/api/support', supportRouter)
-app.use('/api/salesagent', salesAgentRouter)
-app.use('/api/customers', customersRouter)
-// app.use('/api/rechargereminder', rechargereminderRouter)
-// app.use('/api/promotion', promotionRouter)
 
-// Serve static frontend build if dist folder exists (Single Service Render Deployment)
+
+
+
+app.use('/api/feedbackcalls', require('./routes/feedbackcalls'))
+app.use('/api/support', require('./routes/supportRouter'))
+app.use('/api/salesagent', require('./routes/salesAgentRouter'))
+app.use('/api/customers', require('./routes/customersRouter'))
+
+
+
+
+
 const frontendDist = path.join(__dirname, '../Frontend/dist')
 if (fs.existsSync(frontendDist)) {
-  console.log('[Production] Serving static Frontend assets from dist/')
+  console.log('[Production] Serving Frontend from dist/')
   app.use(express.static(frontendDist))
   app.use((req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/audio') || req.path.startsWith('/health')) {
-      return next()
-    }
+    if (req.path.match(/^\/(api|audio|health)/)) return next()
     res.sendFile(path.join(frontendDist, 'index.html'))
   })
 } else {
   app.get('/', (req, res) => res.send('BCT Voice AI Backend Running'))
 }
 
-
-
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`)
-  if (!process.env.RENDER_EXTERNAL_URL && !process.env.BASE_URL) {
-    startTunnel(port)
-  }
+  if (!process.env.RENDER_EXTERNAL_URL && !process.env.BASE_URL)
+    require('./config/tunnel').startTunnel(port)
 })
 
 process.stdin.resume()

@@ -2,87 +2,62 @@ const path = require('path')
 const { spawn } = require('child_process')
 
 let cloudflared = null
-try {
-  cloudflared = require('cloudflared')
-} catch (e) {
-  // cloudflared binary optional in production
-}
+try { cloudflared = require('cloudflared') } catch (_) {}
 
-let liveUrl = ''
-let tunnelPromise = null
+let liveUrl = '', tunnelPromise = null
 
-function getTunnelUrl() {
-  if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '')
-  if (process.env.BASE_URL) return process.env.BASE_URL.replace(/\/$/, '')
-  return liveUrl ? liveUrl.replace(/\/$/, '') : ''
-}
+const getTunnelUrl = () =>
+  (process.env.RENDER_EXTERNAL_URL || process.env.BASE_URL || liveUrl || '').replace(/\/$/, '')
 
 function startTunnel(port = 8000) {
-  const existingUrl = getTunnelUrl()
-  if (existingUrl) {
-    console.log(`[Production Host URL] Using environment URL: ${existingUrl}`)
-    return Promise.resolve(existingUrl)
+  const existing = getTunnelUrl()
+  if (existing) {
+    console.log(`[Host URL] ${existing}`)
+    return Promise.resolve(existing)
   }
 
   if (tunnelPromise) return tunnelPromise
 
-  tunnelPromise = new Promise((resolve) => {
+  tunnelPromise = new Promise(ok => {
     try {
-      const binPath = (cloudflared && cloudflared.bin) || path.join(__dirname, '../node_modules/cloudflared/bin/cloudflared.exe')
-      const child = spawn(binPath, ['tunnel', '--url', `http://localhost:${port}`])
+      const bin = cloudflared?.bin || path.join(__dirname, '../node_modules/cloudflared/bin/cloudflared.exe')
+      const child = spawn(bin, ['tunnel', '--url', `http://localhost:${port}`])
 
-      child.on('error', (err) => console.error('[Cloudflare Tunnel error]', err.message))
+      child.on('error', e => console.error('[CF Tunnel err]', e.message))
 
-      const handleData = (d) => {
-        const text = d.toString()
-        const match = text.match(/https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com/i)
+      const handle = d => {
+        const match = d.toString().match(/https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com/i)
         if (match && !liveUrl) {
-          liveUrl = match[0]
-          process.env.BASE_URL = liveUrl
-          console.log(`[Cloudflare Tunnel] Live HTTPS URL: ${liveUrl}`)
-          resolve(liveUrl)
+          process.env.BASE_URL = liveUrl = match[0]
+          console.log(`[CF Tunnel] ${liveUrl}`)
+          ok(liveUrl)
         }
       }
 
-      child.stdout.on('data', handleData)
-      child.stderr.on('data', handleData)
+      child.stdout.on('data', handle)
+      child.stderr.on('data', handle)
 
       setTimeout(() => {
-        if (!liveUrl) {
-          console.log('[Cloudflare Tunnel] Rate limited or slow. Falling back to Tunnelmole...')
-          try {
-            const tmChild = spawn('npx', ['tunnelmole', `${port}`], { shell: true })
-            tmChild.on('error', (err) => console.error('[Tunnelmole error]', err.message))
-
-            const handleTmData = (d) => {
-              const text = d.toString()
-              const match = text.match(/https:\/\/[a-zA-Z0-9-]+\.tunnelmole\.net/i)
-              if (match && !liveUrl) {
-                liveUrl = match[0]
-                process.env.BASE_URL = liveUrl
-                console.log(`[Tunnelmole Fallback] Live HTTPS URL: ${liveUrl}`)
-                resolve(liveUrl)
-              }
+        if (liveUrl) return ok(liveUrl)
+        console.log('[CF Tunnel] Slow/Failed. Trying Tunnelmole...')
+        try {
+          const tm = spawn('npx', ['tunnelmole', `${port}`], { shell: true })
+          tm.on('error', e => console.error('[Tunnelmole err]', e.message))
+          const handleTm = d => {
+            const match = d.toString().match(/https:\/\/[a-zA-Z0-9-]+\.tunnelmole\.net/i)
+            if (match && !liveUrl) {
+              process.env.BASE_URL = liveUrl = match[0]
+              console.log(`[Tunnelmole] ${liveUrl}`)
+              ok(liveUrl)
             }
-            tmChild.stdout.on('data', handleTmData)
-            tmChild.stderr.on('data', handleTmData)
-
-            setTimeout(() => {
-              if (!liveUrl) resolve(getTunnelUrl())
-            }, 6000)
-          } catch (e) {
-            resolve(getTunnelUrl())
           }
-        } else {
-          resolve(liveUrl || getTunnelUrl())
-        }
+          tm.stdout.on('data', handleTm)
+          tm.stderr.on('data', handleTm)
+          setTimeout(() => !liveUrl && ok(getTunnelUrl()), 6000)
+        } catch { ok(getTunnelUrl()) }
       }, 3000)
-    } catch (err) {
-      console.error('[Tunnel Error]', err)
-      resolve(getTunnelUrl())
-    }
+    } catch { ok(getTunnelUrl()) }
   })
-
   return tunnelPromise
 }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import CustomerCard from '../components/CustomerCard'
 import CustomerListCard from '../components/CustomerListCard'
 import ConversationStream from '../components/ConversationStream'
@@ -12,6 +12,21 @@ export default function FeedbackCalls() {
   const [phone, setPhone] = useState('9057262630')
   const [activeCallId, setActiveCallId] = useState(null)
   const { logs, displayedTextMap, fetchLogs } = useConversation('/api/feedbackcalls/logs')
+
+  useEffect(() => {
+    if (logs && logs.length > 0) {
+      const lastLog = logs[logs.length - 1]
+      if (lastLog.speaker === 'System' && (
+        lastLog.text.toLowerCase().includes('ended') ||
+        lastLog.text.toLowerCase().includes('failed') ||
+        lastLog.text.toLowerCase().includes('cancelled') ||
+        lastLog.text.toLowerCase().includes('completed')
+      )) {
+        setActiveCallId(null)
+        setStatus('Call ended')
+      }
+    }
+  }, [logs])
 
   const handleSelectCustomer = (customer) => {
     if (!customer) return
@@ -61,11 +76,10 @@ export default function FeedbackCalls() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
 
-      {/* Clean Header Bar */}
-      <div className="pb-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <h1 style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }} className="text-3xl font-bold tracking-tight">
-          Feedback Calls
-        </h1>
+      {/* Header */}
+      <div className="space-y-1 pb-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <p style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)' }}>Outbound Campaign</p>
+        <h1 style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--text-primary)', fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 900, letterSpacing: '-0.03em' }}>Feedback Calls</h1>
       </div>
 
       {/* Layout grid */}

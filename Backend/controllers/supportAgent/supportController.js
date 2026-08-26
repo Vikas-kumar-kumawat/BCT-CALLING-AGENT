@@ -1,227 +1,91 @@
-/**
- * controllers/supportAgent/supportController.js - Support IVR & Complaints Dashboard Controller
- */
-
-const { startInboundServer, isActive } = require('../../services/sipInboundService')
+const { startInboundServer, isInboundActive } = require('../../services/sip')
 const { getLocalAudio } = require('../../services/audioService')
-const { streamAudio } = require('../../services/rtpService')
-const { dispatchIvrOption } = require('./index')
+const { streamAudio }   = require('../../services/rtpService')
+const { generateSpeechAudio: tts } = require('../../services/elevenlabsService')
+const { captureRtpAudio: capRtp, transcribeAudio: stt } = require('../../services/sttService')
 
-let conversationLogs = []
-let activeCallSession = null
-let totalCallsCount = 18
+const GREETING = 'Welcome to the newly updated BCT Support system. Press 1 for complaint, 2 for new connection, 3 for billing, 4 for support.'
+const OPTS = {
+  '1': { t: 'Complaint', txt: 'Complaint registered. Team will contact you.', a: 'audio24.mp3' },
+  '2': { t: 'New Connection', txt: 'Thanks! Sales will contact you.', a: 'audio23.mp3' },
+  '3': { t: 'Billing', txt: 'Bill is Rs 799, due 30th. Pay online.', a: 'audio22.mp3' },
+  '4': { t: 'Support', txt: 'Transferring to executive. Stay online.', a: 'audio22.mp3' }
+}
 
-// Initial pre-loaded complaints store
-let complaintsList = [
-  {
-    id: 'TKT-8901',
-    customerName: 'Vikas Kumawat',
-    phone: '9057262630',
-    issue: 'Fiber Optical Light RED - Complete internet outage since morning',
-    category: 'Broadband Outage',
-    status: 'OPEN',
-    sla: '2 Hours',
-    createdAt: new Date(Date.now() - 3600000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  },
-  {
-    id: 'TKT-8894',
-    customerName: 'Amit Sharma',
-    phone: '9829012345',
-    issue: 'High latency & packet loss during evening gaming hours',
-    category: 'Speed & Latency',
-    status: 'IN PROGRESS',
-    sla: '4 Hours',
-    createdAt: new Date(Date.now() - 7200000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  },
-  {
-    id: 'TKT-8872',
-    customerName: 'Priya Verma',
-    phone: '9414056789',
-    issue: 'Requested plan upgrade from 100Mbps to 300Mbps Fiber',
-    category: 'Plan Change',
-    status: 'RESOLVED',
-    sla: 'Resolved',
-    createdAt: new Date(Date.now() - 86400000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
+let logs = [], session = null, calls = 18
+const tk = () => `TKT-${Math.floor(1000 + Math.random() * 9000)}`
+const ts = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+let comps = [
+  { id: 'TKT-8901', customerName: 'Vikas', phone: '9057262630', issue: 'Outage', category: 'Outage', status: 'OPEN', sla: '2 Hours', createdAt: ts() },
+  { id: 'TKT-8894', customerName: 'Amit',  phone: '9829012345', issue: 'Latency', category: 'Speed', status: 'IN PROGRESS', sla: '4 Hours', createdAt: ts() }
 ]
 
-const GREETING_TEXT = 'Welcome to BCT Support. For complaint press 1, for new connection press 2, for billing details press 3, for other support press 4.'
+const log = (snd, spk, txt) => logs.push({ id: Date.now()+Math.random(), sender: snd, speaker: spk, text: txt, time: ts() })
+const stats = () => ({ calls, open: comps.filter(c=>c.status==='OPEN').length, prog: comps.filter(c=>c.status==='IN PROGRESS').length, res: comps.filter(c=>c.status==='RESOLVED').length })
 
-function addLog(sender, speaker, text) {
-  conversationLogs.push({
-    id: Date.now() + Math.floor(Math.random() * 1000),
-    sender,
-    speaker,
-    text,
-    timestamp: new Date().toLocaleTimeString()
-  })
-}
-
-/**
- * Start Inbound Support IVR Call Session
- */
-async function startCall(req, res) {
+const handleInboundCall = async (ip, port, sock) => {
+  session = { ip, port, sock }
+  calls++
+  console.log(`\n[NEW SUPPORT CODE] Inbound call connected from ${ip}:${port}`)
+  log('customer', 'Customer', `Inbound call connected from ${ip}:${port}`)
   try {
-    totalCallsCount += 1
-    if (!isActive()) {
-      await startInboundServer(async (rtpIp, rtpPort, socket) => {
-        activeCallSession = { rtpIp, rtpPort, socket }
-        addLog('customer', 'Customer', `Call connected from ${rtpIp}:${rtpPort}`)
-        
-        try {
-          const audio = await getLocalAudio('audio22.mp3')
-          await streamAudio(audio, rtpIp, rtpPort, socket)
-        } catch (e) {
-          console.warn('[Support Audio Warning]', e.message)
-        }
-        addLog('agent', 'BCT Support IVR', GREETING_TEXT)
-      })
+    const gFile = await tts(GREETING)
+    if (gFile) {
+      console.log(`[NEW SUPPORT CODE] Playing IVR Greeting...`)
+      await streamAudio(await getLocalAudio(gFile), ip, port, sock)
     }
-
-    if (conversationLogs.length === 0) {
-      addLog('agent', 'BCT Support IVR', GREETING_TEXT)
-    }
-
-    res.json({ 
-      success: true, 
-      message: 'BCT Support IVR Active', 
-      logs: conversationLogs,
-      totalCalls: totalCallsCount
-    })
-  } catch (err) {
-    console.error('[Support Call Error]', err.message)
-    res.status(500).json({ 
-      success: false, 
-      message: err.message, 
-      logs: conversationLogs 
-    })
+  } catch (e) {
+    console.error('[Inbound Audio Error]', e.message)
   }
+  log('agent', 'IVR', GREETING)
 }
 
-/**
- * Handle DTMF Option Selection (Keys 1, 2, 3, 4)
- */
-async function selectOption(req, res) {
-  const { option, callerId, name, phone } = req.body || {}
-  if (!option) return res.status(400).json({ success: false, message: 'Option key is required' })
+// Auto-start inbound SIP listener when supportController module is loaded
+if (process.env.SIP_SERVER_IP && process.env.SIP_USERNAME) {
+  startInboundServer(handleInboundCall).catch(err => console.warn('[SIP Inbound Auto-start]', err.message))
+}
 
-  try {
-    const customerPhone = phone || '9057262630'
-    const customerName = name || 'Vikas'
-    addLog('customer', 'Customer (DTMF)', `Pressed Key [ ${option} ]`)
-
-    const result = await dispatchIvrOption(option, { callerId: callerId || `${customerName} (${customerPhone})` })
-    addLog('agent', 'BCT Support Agent', result.text)
-
-    // If Key 1 (Complaint) was selected, auto-register a new complaint ticket!
-    if (option === '1') {
-      const ticketId = result.data?.ticketId || `TKT-${Math.floor(1000 + Math.random() * 9000)}`
-      const newTicket = {
-        id: ticketId,
-        customerName: customerName,
-        phone: customerPhone,
-        issue: result.transcript || 'Broadband service interruption reported via IVR',
-        category: 'IVR Complaint',
-        status: 'OPEN',
-        sla: '2 Hours',
-        createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-      complaintsList.unshift(newTicket)
+module.exports = {
+  startCall: async (req, res) => {
+    try {
+      calls++
+      if (!isInboundActive()) await startInboundServer(handleInboundCall)
+      if (!logs.length) log('agent', 'IVR', GREETING)
+      res.json({ success: true, logs, calls })
+    } catch (e) { res.status(500).json({ success: false, msg: e.message, logs }) }
+  },
+  selectOption: async (req, res) => {
+    const { option: o, name = 'Vikas', phone = '9057262630' } = req.body || {}
+    if (!o) return res.status(400).json({ success: false })
+    log('customer', 'Customer', `Pressed [${o}]`)
+    const opt = OPTS[o], txt = opt ? opt.txt : 'Invalid. Press 1-4.'
+    log('agent', 'IVR', txt)
+    
+    if (o === '1') {
+      let tr = '(IVR)'
+      if (session?.sock) tr = await stt(await capRtp(session.sock, 2500)) || tr
+      comps.unshift({ id: tk(), customerName: name, phone, issue: tr, category: 'Complaint', status: 'OPEN', sla: '2 Hours', createdAt: ts() })
     }
-
-    // Stream audio response over RTP if session is active
-    if (activeCallSession && result.audioFile) {
-      getLocalAudio(result.audioFile).then((audio) => {
-        return streamAudio(audio, activeCallSession.rtpIp, activeCallSession.rtpPort, activeCallSession.socket)
-      }).catch((e) => console.warn('[Support RTP Stream Error]', e.message))
+    
+    if (session) {
+      if (opt?.a) getLocalAudio(opt.a).then(a => streamAudio(a, session.ip, session.port, session.sock)).catch(()=>{})
+      if (opt) tts(txt).then(f => f && getLocalAudio(f).then(a => streamAudio(a, session.ip, session.port, session.sock)).catch(()=>{})).catch(()=>{})
     }
-
-    res.json({ success: true, result, logs: conversationLogs, complaints: complaintsList })
-  } catch (err) {
-    console.error('[Support Option Error]', err.message)
-    res.status(500).json({ success: false, message: err.message, logs: conversationLogs })
+    res.json({ success: true, logs, complaints: comps })
+  },
+  getLogs: (req, res) => res.json({ success: true, logs, stats: stats() }),
+  getComplaints: (req, res) => res.json({ success: true, complaints: comps, stats: stats() }),
+  updateComplaintStatus: (req, res) => {
+    const t = comps.find(c => c.id === req.params.id)
+    if (!t) return res.status(404).json({ success: false })
+    t.status = req.body.status || ({'OPEN':'IN PROGRESS','IN PROGRESS':'RESOLVED','RESOLVED':'OPEN'})[t.status]
+    res.json({ success: true, ticket: t })
+  },
+  createComplaint: (req, res) => {
+    const { customerName: c = 'Walk-in', phone: p = '', issue: i, category: cat = 'General' } = req.body || {}
+    if (!i) return res.status(400).json({ success: false })
+    const t = { id: tk(), customerName: c, phone: p, issue: i, category: cat, status: 'OPEN', sla: '2 Hours', createdAt: ts() }
+    comps.unshift(t)
+    res.json({ success: true, ticket: t })
   }
-}
-
-/**
- * Get active support conversation logs & dashboard stats
- */
-function getLogs(req, res) {
-  res.json({ 
-    success: true, 
-    logs: conversationLogs,
-    stats: {
-      totalCalls: totalCallsCount,
-      openComplaints: complaintsList.filter(c => c.status === 'OPEN').length,
-      inProgressComplaints: complaintsList.filter(c => c.status === 'IN PROGRESS').length,
-      resolvedComplaints: complaintsList.filter(c => c.status === 'RESOLVED').length
-    }
-  })
-}
-
-/**
- * Get all complaints
- */
-function getComplaints(req, res) {
-  res.json({
-    success: true,
-    complaints: complaintsList,
-    stats: {
-      totalCalls: totalCallsCount,
-      openComplaints: complaintsList.filter(c => c.status === 'OPEN').length,
-      inProgressComplaints: complaintsList.filter(c => c.status === 'IN PROGRESS').length,
-      resolvedComplaints: complaintsList.filter(c => c.status === 'RESOLVED').length
-    }
-  })
-}
-
-/**
- * Update complaint status (OPEN -> IN PROGRESS -> RESOLVED)
- */
-function updateComplaintStatus(req, res) {
-  const { id } = req.params
-  const { status } = req.body
-  const ticket = complaintsList.find(c => c.id === id)
-  if (!ticket) return res.status(404).json({ success: false, message: 'Complaint ticket not found' })
-
-  if (status) {
-    ticket.status = status
-  } else {
-    // Toggle cycle
-    ticket.status = ticket.status === 'OPEN' ? 'IN PROGRESS' : ticket.status === 'IN PROGRESS' ? 'RESOLVED' : 'OPEN'
-  }
-
-  res.json({ success: true, message: `Ticket ${id} status updated to ${ticket.status}`, ticket })
-}
-
-/**
- * Add a new complaint manually
- */
-function createComplaint(req, res) {
-  const { customerName, phone, issue, category } = req.body || {}
-  if (!issue) return res.status(400).json({ success: false, message: 'Issue description required' })
-
-  const ticketId = `TKT-${Math.floor(1000 + Math.random() * 9000)}`
-  const newTicket = {
-    id: ticketId,
-    customerName: customerName || 'Walk-in Customer',
-    phone: phone || '9057262630',
-    issue,
-    category: category || 'General Complaint',
-    status: 'OPEN',
-    sla: '2 Hours',
-    createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-
-  complaintsList.unshift(newTicket)
-  res.json({ success: true, message: 'Complaint registered successfully', ticket: newTicket })
-}
-
-module.exports = { 
-  startCall, 
-  selectOption, 
-  getLogs, 
-  getComplaints, 
-  updateComplaintStatus, 
-  createComplaint 
 }
