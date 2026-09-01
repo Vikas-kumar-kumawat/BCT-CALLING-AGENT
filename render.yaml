@@ -3,7 +3,7 @@ services:
     name: bct-calling-agent
     env: node
     plan: free
-    buildCommand: npm run build
+    buildCommand: pip install SpeechRecognition && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV

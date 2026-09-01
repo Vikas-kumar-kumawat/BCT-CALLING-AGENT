@@ -2,6 +2,7 @@
 const { spawn }  = require('child_process')
 const path       = require('path')
 const fs         = require('fs')
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path
 
 const cache = new Map()
 
@@ -13,7 +14,7 @@ function getLocalAudio(filename) {
 
   return new Promise((ok, fail) => {
     const chunks = []
-    const ff = spawn('ffmpeg', ['-i', filePath, '-ar', '8000', '-ac', '1', '-f', 'mulaw', '-'])
+    const ff = spawn(ffmpegPath, ['-i', filePath, '-ar', '8000', '-ac', '1', '-f', 'mulaw', '-'])
     ff.stdout.on('data', c => chunks.push(c))
     ff.stderr.on('data', () => {})
     ff.on('close', code => {

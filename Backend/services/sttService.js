@@ -2,13 +2,14 @@
 const fs   = require('fs')
 const path = require('path')
 const { spawn, execSync } = require('child_process')
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path
 
 const PY_SCRIPT = path.join(__dirname, 'python_stt.py')
 
 function ulawToWav(ulawBuffer) {
   return new Promise((ok, fail) => {
     const chunks = []
-    const ff = spawn('ffmpeg', ['-f', 'mulaw', '-ar', '8000', '-ac', '1', '-i', 'pipe:0',
+    const ff = spawn(ffmpegPath, ['-f', 'mulaw', '-ar', '8000', '-ac', '1', '-i', 'pipe:0',
       '-f', 'wav', '-ar', '16000', 'pipe:1'])
     ff.stdin.write(ulawBuffer); ff.stdin.end()
     ff.stdout.on('data', c => chunks.push(c))

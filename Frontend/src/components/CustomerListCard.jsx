@@ -46,7 +46,7 @@ export default function CustomerListCard({ onCall, onCancelCall, onSelectCustome
   }
 
   return (
-    <div className="cg-card flex flex-col overflow-hidden" style={{ minHeight: '480px' }}>
+    <div className="cg-card flex flex-col overflow-hidden" style={{ height: '520px', maxHeight: 'calc(100vh - 180px)' }}>
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>

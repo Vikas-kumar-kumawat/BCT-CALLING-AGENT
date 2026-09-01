@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import CustomerCard from '../components/CustomerCard'
 import CustomerListCard from '../components/CustomerListCard'
 import ConversationStream from '../components/ConversationStream'
 import { useConversation } from '../hooks/useConversation'
@@ -94,16 +93,7 @@ export default function FeedbackCalls() {
             status={status}
           />
         </div>
-        <div className="lg:col-span-5 space-y-4">
-          <CustomerCard
-            customerName={selectedCustomer.name}
-            onCall={() => handleCall()}
-            onCancelCall={handleCancelCall}
-            loading={loading && !activeCallId}
-            status={!activeCallId ? status : ''}
-            phoneInput={phone}
-            onPhoneChange={setPhone}
-          />
+        <div className="lg:col-span-5">
           <ConversationStream
             logs={logs}
             displayedTextMap={displayedTextMap}

@@ -7,7 +7,7 @@ import SalesAgent from './pages/SalesAgent'
 import InboundCalls from './pages/InboundCalls'
 import {
   LayoutDashboard, PhoneCall, Briefcase, CreditCard,
-  Sparkles, Headphones, ChevronLeft, ChevronRight, Moon, Sun, Menu, X
+  Sparkles, Headphones, ChevronLeft, ChevronRight, Moon, Sun, Menu, X, Radio
 } from 'lucide-react'
 
 const PAGE_LABELS = {
@@ -43,16 +43,15 @@ export default function App() {
     <>
       {/* Brand */}
       <div className="flex items-center justify-between px-4 py-4 shrink-0" style={{ borderBottom: '1px solid var(--sidebar-border)', minHeight: '60px' }}>
-        <div className={`flex items-center gap-3 min-w-0 ${collapsed ? 'mx-auto cursor-pointer' : ''}`}
+        <div className={`flex items-center gap-2.5 min-w-0 ${collapsed ? 'mx-auto cursor-pointer' : ''}`}
           onClick={() => collapsed && setIsSidebarOpen(true)}>
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: 'var(--accent)', boxShadow: '0 4px 16px rgba(232,96,46,0.4)' }}>
-            <span className="text-white font-black text-sm" style={{ fontFamily: 'Manrope, sans-serif' }}>B</span>
-          </div>
-          {!collapsed && (
-            <span className="font-black tracking-tight truncate" style={{ color: 'var(--text-primary)', fontSize: '15px', letterSpacing: '-0.02em' }}>
-              BCT Fibernet
+          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />
+          {!collapsed ? (
+            <span className="font-black tracking-tight truncate" style={{ color: 'var(--text-primary)', fontSize: '16px', letterSpacing: '-0.03em' }}>
+              BCT <span style={{ color: 'var(--accent)' }}>Fibernet</span>
             </span>
+          ) : (
+            <span className="font-black text-xs tracking-tighter" style={{ color: 'var(--accent)' }}>BCT</span>
           )}
         </div>
         {onClose ? (
@@ -147,10 +146,10 @@ export default function App() {
               <Menu size={17} />
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'var(--accent)' }}>
-                <span className="text-white font-black text-xs">B</span>
-              </div>
-              <span className="font-black text-sm" style={{ color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>BCT Fibernet</span>
+              <div className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />
+              <span className="font-black text-sm" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                BCT <span style={{ color: 'var(--accent)' }}>Fibernet</span>
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2">

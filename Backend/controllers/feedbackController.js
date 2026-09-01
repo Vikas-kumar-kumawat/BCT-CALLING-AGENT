@@ -25,12 +25,21 @@ const close = async () => {
 
 const save = (name, phone, txt) =>
   db.from('customers').update({ feedback: txt }).eq('mobile-number', phone).select()
-    .then(({ data }) => !data?.length && db.from('customers').insert([{ name, 'mobile-number': phone, feedback: txt }])).catch(console.error)
+    .then(({ data }) => {
+      if (!data || data.length === 0) {
+        return db.from('customers').insert([{ name, 'mobile-number': phone, feedback: txt }]).select()
+      }
+    }).catch(console.error)
 
 ;(async () => {
-  const [f1, f2] = await Promise.all([tts(GREETING, VOICE), tts(THANK_YOU, VOICE)])
-  if (f1) await getLocalAudio(f1); if (f2) await getLocalAudio(f2)
-})().catch(console.error)
+  try {
+    const [f1, f2] = await Promise.all([tts(GREETING, VOICE), tts(THANK_YOU, VOICE)])
+    if (f1) await getLocalAudio(f1)
+    if (f2) await getLocalAudio(f2)
+  } catch (e) {
+    console.error('[Startup Audio Cache]', e.message)
+  }
+})()
 
 module.exports = {
   startCall: async (req, res) => {
@@ -51,7 +60,7 @@ module.exports = {
         await streamAudio(await getLocalAudio(gFile), call.rtpIp, call.rtpPort, call.rtpSocket)
       }
 
-      const txt = await transcribeAudio(await captureRtpAudio(call.rtpSocket, 2200))
+      const txt = await transcribeAudio(await captureRtpAudio(call.rtpSocket, 8000))
       if (txt) { log('customer', name, txt); save(name, target, txt) }
 
       const tFile = await tts(THANK_YOU, VOICE)

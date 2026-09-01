@@ -23,7 +23,7 @@ export default function ConversationStream({ logs = [], displayedTextMap = {}, s
   const dispLogs = isLive ? logs : pastLogs
 
   return (
-    <div className="cg-card flex flex-col overflow-hidden" style={{ height: 'clamp(320px, 55vw, 510px)' }}>
+    <div className="cg-card flex flex-col overflow-hidden" style={{ height: '520px', maxHeight: 'calc(100vh - 180px)' }}>
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 shrink-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
