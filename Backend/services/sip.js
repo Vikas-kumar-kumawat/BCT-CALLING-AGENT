@@ -329,14 +329,14 @@ async function startInboundServer(onCallAnswered) {
       await udpSend(sock, rinfo.address, rinfo.port, buildResponse(200, 'OK', req))
   })
 
-  sock.on('error', e => console.error('[SIP Inbound]', e.message))
-  // Try to bind preferred localPort; on EADDRINUSE fallback to ephemeral port
+  const errorHandler = e => {
+    if (e.code !== 'EADDRINUSE') console.error('[SIP Inbound]', e.message)
+  }
+  sock.on('error', errorHandler)
   await new Promise((ok, fail) => {
     sock.bind(localPort, (e) => {
       if (!e) return ok()
       if (e && e.code === 'EADDRINUSE') {
-        console.warn(`[SIP Inbound] preferred port ${localPort} in use, falling back to ephemeral port`)
-        // try ephemeral port
         return sock.bind(0, (e2) => e2 ? fail(e2) : ok())
       }
       return fail(e)
