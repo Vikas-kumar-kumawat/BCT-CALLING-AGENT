@@ -18,9 +18,20 @@ for (let i = 0; i < 256; i++) {
     ulaw2linear[i] = sign * (sample - 132);
 }
 
-// Pure JavaScript u-law → WAV (8000Hz 16-bit PCM) Converter (No ffmpeg/disk I/O required)
-function ulawToWavBuffer(ulawBuffer) {
-  const pcmDataLength = ulawBuffer.length * 2;
+// Precompute A-law to 16-bit linear PCM table
+const alaw2linear = new Int16Array(256);
+for (let i = 0; i < 256; i++) {
+    const aLawByte = i ^ 0x55;
+    const sign = (aLawByte & 0x80) ? -1 : 1;
+    const exponent = (aLawByte >> 4) & 0x07;
+    const mantissa = aLawByte & 0x0F;
+    let sample = (exponent === 0) ? (mantissa << 4) + 8 : ((mantissa << 4) + 264) << (exponent - 1);
+    alaw2linear[i] = sign * sample;
+}
+
+// Pure JavaScript A-law/U-law → WAV (8000Hz 16-bit PCM) Converter
+function pcmToWavBuffer(payloadBuffer, isAlaw) {
+  const pcmDataLength = payloadBuffer.length * 2;
   const wavBuffer = Buffer.alloc(44 + pcmDataLength);
   
   // RIFF chunk descriptor
@@ -43,8 +54,9 @@ function ulawToWavBuffer(ulawBuffer) {
   wavBuffer.writeUInt32LE(pcmDataLength, 40);
   
   let offset = 44;
-  for (let i = 0; i < ulawBuffer.length; i++) {
-    wavBuffer.writeInt16LE(ulaw2linear[ulawBuffer[i]], offset);
+  const lookupTable = isAlaw ? alaw2linear : ulaw2linear;
+  for (let i = 0; i < payloadBuffer.length; i++) {
+    wavBuffer.writeInt16LE(lookupTable[payloadBuffer[i]], offset);
     offset += 2;
   }
   
@@ -52,14 +64,14 @@ function ulawToWavBuffer(ulawBuffer) {
 }
 
 
-async function transcribeAudio(audioInput) {
+async function transcribeAudio(audioInput, isAlaw = false) {
   if (!Buffer.isBuffer(audioInput) || !audioInput.length)
     return '(No audio – RTP port blocked or customer silent)';
 
-  // Convert u-law directly to WAV in memory using pure JS (no ffmpeg needed)
+  // Convert A-law or u-law directly to WAV in memory using pure JS
   let wavBuffer;
   try {
-    wavBuffer = ulawToWavBuffer(audioInput);
+    wavBuffer = pcmToWavBuffer(audioInput, isAlaw);
   } catch (e) {
     return '(No speech detected)';
   }
@@ -131,16 +143,22 @@ function captureRtpStream(socket, onChunk, totalMaxMs = 8000) {
   let packets = [];
   let hasSpoken = false;
   let silenceStart = 0;
+  let isAlaw = null;
   let totalTimer = setTimeout(() => finish(), totalMaxMs);
 
   function finish() {
     socket?.removeListener('message', onMsg);
     clearTimeout(totalTimer);
-    if (packets.length) onChunk(Buffer.concat(packets));
+    if (packets.length) onChunk(Buffer.concat(packets), !!isAlaw);
   }
 
   function onMsg(msg) {
     if (msg.length <= 12) return;
+    const pt = msg[1] & 0x7F;
+    if (pt !== 0 && pt !== 8) return; // Only process PCMU (0) or PCMA (8)
+    
+    if (isAlaw === null) isAlaw = (pt === 8);
+
     const payload = msg.slice(12);
     packets.push(payload);
 
@@ -159,7 +177,7 @@ function captureRtpStream(socket, onChunk, totalMaxMs = 8000) {
         packets = [];
         hasSpoken = false;
         silenceStart = 0;
-        try { onChunk(chunk) } catch (_) { }
+        try { onChunk(chunk, !!isAlaw) } catch (_) { }
       }
     }
   }
@@ -174,17 +192,23 @@ function captureRtpAudio(socket, maxDurationMs = 5000) {
     let silenceStart = 0;
     let hasSpoken = false;
     let timeoutId = null;
+    let isAlaw = null;
     const SILENCE_THRESH = 15;
     const SILENCE_TIMEOUT = 600; // Cut dead-air detection to 600ms
 
     const resolveAndClean = () => {
       socket?.removeListener('message', onMsg);
       clearTimeout(timeoutId);
-      ok(Buffer.concat(packets));
+      ok({ audioBuffer: Buffer.concat(packets), isAlaw: !!isAlaw });
     };
 
     const onMsg = msg => {
       if (msg.length <= 12) return;
+      const pt = msg[1] & 0x7F;
+      if (pt !== 0 && pt !== 8) return;
+
+      if (isAlaw === null) isAlaw = (pt === 8);
+
       const payload = msg.slice(12);
       packets.push(payload);
 

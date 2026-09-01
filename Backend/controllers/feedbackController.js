@@ -76,9 +76,9 @@ async function captureAndStoreFeedback(session, name, target, maxMs = 8000) {
       }
     }, maxMs)
 
-    captureRtpStream(session.rtpSocket, (chunk) => {
+    captureRtpStream(session.rtpSocket, (chunk, isAlaw) => {
       if (resolved) return
-      transcribeAudio(chunk).then(feedback => {
+      transcribeAudio(chunk, isAlaw).then(feedback => {
         if (resolved) return
         allResults.push(feedback)
         if (detected || !isMeaningfulSpeech(feedback)) return
