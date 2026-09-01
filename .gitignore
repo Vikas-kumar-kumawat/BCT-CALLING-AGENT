@@ -30,6 +30,4 @@ Thumbs.db
 *.swp
 *.swo
 
-# Temporary audio cache
-Backend/audio/*.mp3
-!Backend/audio/.gitkeep
+
