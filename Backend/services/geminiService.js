@@ -1,8 +1,7 @@
 const fetch = (...args) => (globalThis.fetch ? globalThis.fetch(...args) : import('node-fetch').then(({ default: f }) => f(...args)))
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
-const rawModel = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
-const GEMINI_MODEL = rawModel.includes('2.5') ? 'gemini-1.5-flash' : rawModel
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
 const GEMINI_API_URL = process.env.GEMINI_API_URL || `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`
 
 function fallbackClassify(text) {
