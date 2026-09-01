@@ -1,7 +1,8 @@
 const fetch = require('node-fetch')
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+const rawModel = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+const GEMINI_MODEL = rawModel.includes('2.5') ? 'gemini-1.5-flash' : rawModel
 const GEMINI_API_URL = process.env.GEMINI_API_URL || `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`
 
 function fallbackClassify(text) {

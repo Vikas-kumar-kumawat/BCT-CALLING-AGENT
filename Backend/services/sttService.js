@@ -63,7 +63,8 @@ async function transcribeAudio(audioInput) {
           ]
         }]
       };
-      const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+      let GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+      if (GEMINI_MODEL.includes('2.5')) GEMINI_MODEL = 'gemini-1.5-flash';
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
       const res = await fetch(url, {
         method: 'POST',
