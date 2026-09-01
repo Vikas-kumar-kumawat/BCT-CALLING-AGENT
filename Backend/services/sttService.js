@@ -7,22 +7,6 @@ const fetch = (...args) => (globalThis.fetch ? globalThis.fetch(...args) : impor
 
 const PY_SCRIPT = path.join(__dirname, 'python_stt.py')
 
-function ulawToWav(ulawBuffer) {
-  return new Promise((ok, fail) => {
-    const chunks = [];
-    const ff = spawn(ffmpegPath, ['-f', 'mulaw', '-ar', '8000', '-ac', '1', '-i', 'pipe:0',
-      '-f', 'wav', '-ar', '16000', 'pipe:1']);
-    ff.stdin.write(ulawBuffer);
-    ff.stdin.end();
-    ff.stdout.on('data', c => chunks.push(c));
-    ff.stderr.on('data', () => { });
-    ff.on('close', code => chunks.length ? ok(Buffer.concat(chunks)) : fail(new Error(`ffmpeg exit ${code}`)));
-    ff.on('error', fail);
-  });
-}
-
-const CHROMIUM_SPEECH_KEY = 'AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw';
-
 // Precompute u-law to 16-bit linear PCM table
 const ulaw2linear = new Int16Array(256);
 for (let i = 0; i < 256; i++) {
@@ -46,13 +30,13 @@ function ulawToWavBuffer(ulawBuffer) {
   
   // fmt sub-chunk
   wavBuffer.write('fmt ', 12);
-  wavBuffer.writeUInt32LE(16, 16); // Subchunk1Size
-  wavBuffer.writeUInt16LE(1, 20); // AudioFormat
-  wavBuffer.writeUInt16LE(1, 22); // NumChannels
-  wavBuffer.writeUInt32LE(8000, 24); // SampleRate
-  wavBuffer.writeUInt32LE(16000, 28); // ByteRate
-  wavBuffer.writeUInt16LE(2, 32); // BlockAlign
-  wavBuffer.writeUInt16LE(16, 34); // BitsPerSample
+  wavBuffer.writeUInt32LE(16, 16);
+  wavBuffer.writeUInt16LE(1, 20);
+  wavBuffer.writeUInt16LE(1, 22);
+  wavBuffer.writeUInt32LE(8000, 24);
+  wavBuffer.writeUInt32LE(16000, 28);
+  wavBuffer.writeUInt16LE(2, 32);
+  wavBuffer.writeUInt16LE(16, 34);
   
   // data sub-chunk
   wavBuffer.write('data', 36);
@@ -67,30 +51,6 @@ function ulawToWavBuffer(ulawBuffer) {
   return wavBuffer;
 }
 
-// Pure JavaScript Google Web Speech API (Works on Render Production, 100% Free)
-async function googleWebSpeechRecognize(wavBuffer, lang) {
-  try {
-    const url = `https://www.google.com/speech-api/v2/recognize?client=chromium&key=${CHROMIUM_SPEECH_KEY}&lang=${lang}&maxresults=1`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'audio/wav' },
-      body: wavBuffer
-    });
-    if (!res.ok) return null;
-    const text = await res.text();
-    for (const line of text.split('\n')) {
-      if (!line.trim()) continue;
-      try {
-        const json = JSON.parse(line);
-        const alt = json.result?.[0]?.alternative?.[0];
-        if (alt?.transcript) {
-           return { text: alt.transcript.trim(), confidence: alt.confidence || 0 };
-        }
-      } catch (_) {}
-    }
-  } catch (_) {}
-  return null;
-}
 
 async function transcribeAudio(audioInput) {
   if (!Buffer.isBuffer(audioInput) || !audioInput.length)
@@ -133,31 +93,9 @@ async function transcribeAudio(audioInput) {
 
     const pythonCmd = findPythonCmd();
     if (!pythonCmd) {
-      // Fallback to pure JS Google API if Python is missing
       fs.promises.unlink(tmp).catch(() => {});
-      console.warn('[STT] Python not found on PATH, falling back to pure JS Google STT...');
-      
-      (async () => {
-        try {
-          const [hiRes, enRes] = await Promise.all([
-            googleWebSpeechRecognize(wavBuffer, 'hi-IN'),
-            googleWebSpeechRecognize(wavBuffer, 'en-IN')
-          ]);
-
-          let bestRes = null;
-          if (hiRes && enRes) {
-            bestRes = (hiRes.confidence >= enRes.confidence) ? hiRes : enRes;
-          } else {
-            bestRes = hiRes || enRes;
-          }
-
-          if (bestRes && bestRes.text) resolve(bestRes.text);
-          else resolve('(No speech detected)');
-        } catch (e) {
-          resolve('(No speech detected)');
-        }
-      })();
-      return;
+      console.warn('[STT] Critical Error: Python environment not found! STT will fail.');
+      return resolve('(STT Error: Python environment not found)');
     }
 
     // Execute Python speech_recognition script
