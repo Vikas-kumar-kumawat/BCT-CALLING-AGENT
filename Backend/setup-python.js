@@ -37,9 +37,18 @@ try {
 
   console.log('Installing SpeechRecognition in virtual environment...');
   execSync(`${venvPip} install SpeechRecognition`, { stdio: 'inherit' });
-  console.log('✅ Python STT setup complete!');
+  console.log('✅ Python STT setup complete (venv)!');
 } catch (err) {
-  console.error('❌ Failed to setup Python environment:', err.message);
-  // We don't fail the build, we just fallback to JS at runtime
-  process.exit(0);
+  console.warn('⚠️ Virtual environment setup failed, trying direct pip install...', err.message);
+  try {
+    execSync(`${sysPython} -m pip install SpeechRecognition --user`, { stdio: 'inherit' });
+    console.log('✅ Python STT setup complete (pip --user)!');
+  } catch (e1) {
+    try {
+      execSync(`${sysPython} -m pip install SpeechRecognition --break-system-packages`, { stdio: 'inherit' });
+      console.log('✅ Python STT setup complete (pip --break-system-packages)!');
+    } catch (e2) {
+      console.error('❌ Failed to install SpeechRecognition package:', e2.message);
+    }
+  }
 }
