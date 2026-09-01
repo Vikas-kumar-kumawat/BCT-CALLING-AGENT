@@ -109,7 +109,19 @@ async function transcribeAudio(audioInput) {
 
   return new Promise((resolve) => {
     function findPythonCmd() {
-      const candidates = [process.env.PYTHON, 'python', 'python3', 'py'].filter(Boolean);
+      const isWin = process.platform === 'win32';
+      const venvPython = isWin 
+        ? path.join(__dirname, '..', '.venv', 'Scripts', 'python.exe')
+        : path.join(__dirname, '..', '.venv', 'bin', 'python');
+
+      const candidates = [
+        process.env.PYTHON, 
+        require('fs').existsSync(venvPython) ? venvPython : null,
+        'python', 
+        'python3', 
+        'py'
+      ].filter(Boolean);
+
       for (const cmd of candidates) {
         try {
           const res = spawnSync(cmd, ['--version'], { windowsHide: true });
