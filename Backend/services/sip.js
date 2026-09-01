@@ -160,7 +160,8 @@ async function makeSipCall(targetPhone) {
 
   await new Promise((ok, fail) => sipSock.bind(0, e => e ? fail(e) : ok()))
   const localPort = sipSock.address().port
-  await new Promise((ok, fail) => rtpSock.bind(15000, e => e ? fail(e) : ok()))
+  await new Promise((ok, fail) => rtpSock.bind(0, e => e ? fail(e) : ok()))
+  const localRtpPort = rtpSock.address().port
 
   try {
     await doRegister(sipSock, localIp, localPort, serverIp, serverPort, user, pass, listeners)
@@ -173,7 +174,7 @@ async function makeSipCall(targetPhone) {
 
     const sdp = [
       'v=0', `o=- ${Date.now()} ${Date.now()} IN IP4 ${localIp}`, 's=BCT Call',
-      `c=IN IP4 ${localIp}`, 't=0 0', 'm=audio 15000 RTP/AVP 0 8 101',
+      `c=IN IP4 ${localIp}`, 't=0 0', `m=audio ${localRtpPort} RTP/AVP 0 8 101`,
       'a=rtpmap:0 PCMU/8000', 'a=rtpmap:8 PCMA/8000',
       'a=rtpmap:101 telephone-event/8000', 'a=fmtp:101 0-15', 'a=sendrecv'
     ].join('\r\n') + '\r\n'

@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const REQUIRED_ENV = ['ELEVENLABS_API_KEY', 'GEMINI_API_KEY', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY']
+const REQUIRED_ENV = ['GEMINI_API_KEY', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY']
 const missing = REQUIRED_ENV.filter(k => !process.env[k])
 if (missing.length > 0) console.error('[ENV ERROR] Missing required:', missing.join(', '))
 else console.log('[ENV] Required vars loaded ✓')
