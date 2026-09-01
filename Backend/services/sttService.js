@@ -23,30 +23,58 @@ function ulawToWav(ulawBuffer) {
 
 const CHROMIUM_SPEECH_KEY = 'AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw';
 
-// Pure JavaScript u-law → 16000Hz 16-bit PCM Converter (No ffmpeg/disk I/O required)
-function ulawToPcm16kBuffer(ulawBuffer) {
-  const pcm16 = new Int16Array(ulawBuffer.length * 2);
+// Precompute u-law to 16-bit linear PCM table
+const ulaw2linear = new Int16Array(256);
+for (let i = 0; i < 256; i++) {
+    const uLawByte = ~i;
+    const sign = (uLawByte & 0x80) ? -1 : 1;
+    const exponent = (uLawByte >> 4) & 0x07;
+    const mantissa = uLawByte & 0x0F;
+    const sample = ((mantissa << 3) + 132) << exponent;
+    ulaw2linear[i] = sign * (sample - 132);
+}
+
+// Pure JavaScript u-law → WAV (8000Hz 16-bit PCM) Converter (No ffmpeg/disk I/O required)
+function ulawToWavBuffer(ulawBuffer) {
+  const pcmDataLength = ulawBuffer.length * 2;
+  const wavBuffer = Buffer.alloc(44 + pcmDataLength);
+  
+  // RIFF chunk descriptor
+  wavBuffer.write('RIFF', 0);
+  wavBuffer.writeUInt32LE(36 + pcmDataLength, 4);
+  wavBuffer.write('WAVE', 8);
+  
+  // fmt sub-chunk
+  wavBuffer.write('fmt ', 12);
+  wavBuffer.writeUInt32LE(16, 16); // Subchunk1Size
+  wavBuffer.writeUInt16LE(1, 20); // AudioFormat
+  wavBuffer.writeUInt16LE(1, 22); // NumChannels
+  wavBuffer.writeUInt32LE(8000, 24); // SampleRate
+  wavBuffer.writeUInt32LE(16000, 28); // ByteRate
+  wavBuffer.writeUInt16LE(2, 32); // BlockAlign
+  wavBuffer.writeUInt16LE(16, 34); // BitsPerSample
+  
+  // data sub-chunk
+  wavBuffer.write('data', 36);
+  wavBuffer.writeUInt32LE(pcmDataLength, 40);
+  
+  let offset = 44;
   for (let i = 0; i < ulawBuffer.length; i++) {
-    const u = ~ulawBuffer[i];
-    const sign = (u & 0x80) ? -1 : 1;
-    const exponent = (u >> 4) & 0x07;
-    const mantissa = u & 0x0F;
-    let sample = (mantissa << (exponent + 3)) + 132;
-    sample = (sign * sample) & 0xFFFF;
-    pcm16[i * 2] = sample;
-    pcm16[i * 2 + 1] = sample;
+    wavBuffer.writeInt16LE(ulaw2linear[ulawBuffer[i]], offset);
+    offset += 2;
   }
-  return Buffer.from(pcm16.buffer);
+  
+  return wavBuffer;
 }
 
 // Pure JavaScript Google Web Speech API (Works on Render Production, 100% Free)
-async function googleWebSpeechRecognize(pcmBuffer, lang) {
+async function googleWebSpeechRecognize(wavBuffer, lang) {
   try {
     const url = `https://www.google.com/speech-api/v2/recognize?client=chromium&key=${CHROMIUM_SPEECH_KEY}&lang=${lang}&maxresults=1`;
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'audio/l16; rate=16000' },
-      body: pcmBuffer
+      headers: { 'Content-Type': 'audio/wav' },
+      body: wavBuffer
     });
     if (!res.ok) return null;
     const text = await res.text();
@@ -55,7 +83,9 @@ async function googleWebSpeechRecognize(pcmBuffer, lang) {
       try {
         const json = JSON.parse(line);
         const alt = json.result?.[0]?.alternative?.[0];
-        if (alt?.transcript) return alt.transcript.trim();
+        if (alt?.transcript) {
+           return { text: alt.transcript.trim(), confidence: alt.confidence || 0 };
+        }
       } catch (_) {}
     }
   } catch (_) {}
@@ -66,33 +96,11 @@ async function transcribeAudio(audioInput) {
   if (!Buffer.isBuffer(audioInput) || !audioInput.length)
     return '(No audio – RTP port blocked or customer silent)';
 
-  // 1. Pure Node.js Google Web Speech API (Fast, Free, Perfect for Render Production)
-  try {
-    const pcmBuffer = ulawToPcm16kBuffer(audioInput);
-    
-    // Fast-race promises: return as soon as EITHER hi-IN or en-IN returns a valid transcript
-    const jsText = await new Promise((resolve) => {
-      let pending = 2;
-      let resolved = false;
-      const check = (text) => {
-        if (resolved) return;
-        if (text) { resolved = true; resolve(text); }
-        else if (--pending === 0) resolve(null);
-      };
-      googleWebSpeechRecognize(pcmBuffer, 'hi-IN').then(check).catch(() => check(null));
-      googleWebSpeechRecognize(pcmBuffer, 'en-IN').then(check).catch(() => check(null));
-    });
-
-    if (jsText) return jsText;
-  } catch (e) {
-    console.warn('[STT] Pure JS Google STT failed, trying fallback...', e.message);
-  }
-
-  // 2. Fallback to FFmpeg + Python STT (for local environment)
+  // Convert u-law directly to WAV in memory using pure JS (no ffmpeg needed)
   let wavBuffer;
   try {
-    wavBuffer = await ulawToWav(audioInput);
-  } catch (_) {
+    wavBuffer = ulawToWavBuffer(audioInput);
+  } catch (e) {
     return '(No speech detected)';
   }
 
@@ -113,25 +121,34 @@ async function transcribeAudio(audioInput) {
 
     const pythonCmd = findPythonCmd();
     if (!pythonCmd) {
-      const CLOUD_STT_URL = process.env.CLOUD_STT_URL || '';
-      const CLOUD_STT_KEY = process.env.CLOUD_STT_KEY || '';
-      if (CLOUD_STT_URL) {
-        (async () => {
-          try {
-            const resp = await fetch(CLOUD_STT_URL, {
-              method: 'POST', headers: { 'Authorization': CLOUD_STT_KEY ? `Bearer ${CLOUD_STT_KEY}` : '', 'Content-Type': 'audio/wav' },
-              body: wavBuffer
-            });
-            if (!resp.ok) return resolve(`(STT Error: cloud ${resp.status})`);
-            const j = await resp.json();
-            return resolve(j.text || '(No speech detected)');
-          } catch (e) { return resolve(`(STT Error: ${e.message})`); }
-        })();
-        return;
-      }
-      return resolve('(STT Error: python not found on PATH)');
+      // Fallback to pure JS Google API if Python is missing
+      fs.promises.unlink(tmp).catch(() => {});
+      console.warn('[STT] Python not found on PATH, falling back to pure JS Google STT...');
+      
+      (async () => {
+        try {
+          const [hiRes, enRes] = await Promise.all([
+            googleWebSpeechRecognize(wavBuffer, 'hi-IN'),
+            googleWebSpeechRecognize(wavBuffer, 'en-IN')
+          ]);
+
+          let bestRes = null;
+          if (hiRes && enRes) {
+            bestRes = (hiRes.confidence >= enRes.confidence) ? hiRes : enRes;
+          } else {
+            bestRes = hiRes || enRes;
+          }
+
+          if (bestRes && bestRes.text) resolve(bestRes.text);
+          else resolve('(No speech detected)');
+        } catch (e) {
+          resolve('(No speech detected)');
+        }
+      })();
+      return;
     }
 
+    // Execute Python speech_recognition script
     const py = spawn(pythonCmd, [PY_SCRIPT, tmp], { windowsHide: true });
     let out = '';
     let err = '';
@@ -139,14 +156,19 @@ async function transcribeAudio(audioInput) {
     py.stdout.on('data', d => out += d);
     py.stderr.setEncoding('utf8');
     py.stderr.on('data', d => err += d);
+    
     py.on('close', code => {
-      try { fs.unlinkSync(tmp) } catch (_) { }
+      fs.promises.unlink(tmp).catch(() => {});
       const txt = (out || '').trim();
-      if (txt.startsWith('ERROR:') || err) return resolve(`(STT Error: ${err || txt})`);
+      if (txt.startsWith('ERROR:') || err) {
+         console.warn(`[STT] Python Error: ${err || txt}`);
+         return resolve(`(STT Error: ${err || txt})`);
+      }
       resolve(txt || '(No speech detected)');
     });
+    
     py.on('error', e => {
-      try { fs.unlinkSync(tmp) } catch (_) { }
+      fs.promises.unlink(tmp).catch(() => {});
       resolve(`(STT Error: ${e.message})`);
     });
   });

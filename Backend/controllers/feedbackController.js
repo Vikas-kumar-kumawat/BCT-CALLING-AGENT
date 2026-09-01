@@ -3,236 +3,185 @@ const { getLocalAudio } = require('../services/audioService')
 const { streamAudio } = require('../services/rtpService')
 const { captureRtpStream, transcribeAudio } = require('../services/sttService')
 const { classifyFeedback } = require('../services/groqService')
+const { log, getLogs: getLogsArray, resetLogs } = require('../services/feedbackService')
+const { GREETING } = require('../config/voiceConfig')
 const db = require('../config/supabase')
-const { log, getLogs: getLogsArray, resetLogs, generateSpeech } = require('../services/feedbackService')
-const { GREETING, THANK_YOU, SWARVAM_VOICE_ID, SWARVAM_RATE } = require('../config/voiceConfig')
 
-let session = null
+let activeSession = null
 
-// --- Unified TTS & Audio streaming helper ---
-async function speakText(session, text, logAsVoiceAgent = true) {
-  if (!session) return;
+// --- Preload Audio Files for Zero-Latency Playback ---
+getLocalAudio('starting.mp3').catch(() => { })
+getLocalAudio('ending-positive.mp3').catch(() => { })
+getLocalAudio('ending-negetive.mp3').catch(() => { })
+
+// --- Internal Helper Methods ---
+async function playAudio(session, filename) {
   try {
-    const voiceId = session.selectedVoice || SWARVAM_VOICE_ID;
-    console.log(`[speakText] generating TTS for voiceId=${voiceId}`);
-
-    const file = await generateSpeech(text, { voiceId, rate: SWARVAM_RATE });
-    let audioBuffer;
-
-    if (!file) {
-      console.warn(`[speakText] TTS failed for "${text}"; falling back to local voice1.mpeg`);
-      audioBuffer = await getLocalAudio('voice1.mpeg').catch(() => null);
-    } else {
-      if (logAsVoiceAgent) log('agent', 'Voice Agent', text);
-      audioBuffer = await getLocalAudio(file).catch(() => null);
-    }
-
-    if (audioBuffer) {
-      console.log(`[speakText] Stream audio buffer length: ${audioBuffer.length}`);
-      await streamAudio(audioBuffer, session.rtpIp, session.rtpPort, session.rtpSocket);
-      console.log('[speakText] streamAudio finished');
+    const audioBuffer = await getLocalAudio(filename)
+    if (audioBuffer && session?.rtpSocket) {
+      await streamAudio(audioBuffer, session.rtpIp, session.rtpPort, session.rtpSocket)
     }
   } catch (err) {
-    console.warn('[speakText] failed', err.message);
+    console.warn(`[Audio] Failed to play ${filename}:`, err.message)
   }
 }
 
-// Preload the audio files in the background on startup so they play with 0ms delay
-getLocalAudio('starting.mp3').catch(() => { });
-getLocalAudio('ending-positive.mp3').catch(() => { });
-getLocalAudio('ending-negetive.mp3').catch(() => { });
-
-// --- Call Flow Helpers ---
 async function playGreeting(session) {
-  try {
-    log('agent', 'AI', GREETING);
-    const audioBuffer = await getLocalAudio('starting.mp3');
-    if (audioBuffer) {
-      console.log('[playGreeting] Streaming starting.mp3');
-      await streamAudio(audioBuffer, session.rtpIp, session.rtpPort, session.rtpSocket);
-    }
-  } catch (err) {
-    console.warn('[playGreeting] failed to load starting.mp3', err.message);
-    // await speakText(session, GREETING); // Swarvam AI disabled for now
-  }
+  log('agent', 'AI', GREETING)
+  console.log('[playGreeting] Streaming starting.mp3')
+  await playAudio(session, 'starting.mp3')
 }
 
 async function captureAndStoreFeedback(session, name, target, maxMs = 8000) {
-  let detected = false;
-  const allResults = [];
+  let detected = false
+  const allResults = []
 
-  log('agent', 'System', 'Listening for feedback...');
+  log('agent', 'System', 'Listening for feedback...')
 
   const isMeaningfulSpeech = (text) => {
-    if (typeof text !== 'string') return false;
-    const t = text.trim().toLowerCase();
-    if (t.length < 3) return false;
-    return !['no speech', 'no audio', 'rtp', 'stt error'].some(bad => t.includes(bad)) && !t.startsWith('error:');
-  };
+    if (typeof text !== 'string') return false
+    const t = text.trim().toLowerCase()
+    if (t.length < 3) return false
+    return !['no speech', 'no audio', 'rtp', 'stt error'].some(bad => t.includes(bad)) && !t.startsWith('error:')
+  }
 
   const storeFeedback = async (feedbackText) => {
     try {
-      await db.from('customers').upsert([{ name, 'mobile-number': target, feedback: feedbackText }]);
+      await db.from('customers').upsert([{ name, 'mobile-number': target, feedback: feedbackText }])
     } catch (err) {
-      console.warn('[DB] Failed to store feedback', err.message);
+      console.warn('[DB] Failed to store feedback:', err.message)
     }
-  };
+  }
 
   return new Promise((resolve) => {
-    let resolved = false;
-
-    const finishEarly = () => {
-      if (resolved) return;
-      resolved = true;
-      resolve();
-    };
+    let resolved = false
+    const finish = () => {
+      if (!resolved) {
+        resolved = true
+        resolve()
+      }
+    }
 
     const timer = setTimeout(() => {
       if (!resolved) {
         if (!detected && allResults.length > 0) {
-          const candidate = allResults.filter(r => typeof r === 'string' && !r.startsWith('(')).sort((a, b) => b.length - a.length)[0];
+          const candidate = allResults.filter(r => typeof r === 'string' && !r.startsWith('(')).sort((a, b) => b.length - a.length)[0]
           if (candidate) {
-            log('agent', 'System', 'No clear speech detected by threshold — storing best-effort transcript.');
-            log('customer', name, candidate);
-            storeFeedback(candidate);
+            log('agent', 'System', 'No clear speech detected by threshold — storing best-effort transcript.')
+            log('customer', name, candidate)
+            storeFeedback(candidate)
           }
         }
-        finishEarly();
+        finish()
       }
-    }, maxMs);
+    }, maxMs)
 
-    // Call without awaiting to allow early resolution
     captureRtpStream(session.rtpSocket, (chunk) => {
-      if (resolved) return;
+      if (resolved) return
       transcribeAudio(chunk).then(feedback => {
-        if (resolved) return;
-        allResults.push(feedback);
-        if (detected || !isMeaningfulSpeech(feedback)) return;
+        if (resolved) return
+        allResults.push(feedback)
+        if (detected || !isMeaningfulSpeech(feedback)) return
 
-        detected = true;
-        log('customer', name, feedback);
-        storeFeedback(feedback);
-
-        // Resolve early! This makes the agent respond to the customer immediately.
-        clearTimeout(timer);
-        finishEarly();
-      }).catch(() => { });
-    }, maxMs).catch(() => { });
-  });
+        detected = true
+        log('customer', name, feedback)
+        storeFeedback(feedback)
+        clearTimeout(timer)
+        finish()
+      }).catch(() => { })
+    }, maxMs).catch(() => { })
+  })
 }
-
-
-
-
 
 async function analyzeAndRespond(session) {
   try {
-    const customerTexts = getLogsArray().filter(l => l.sender === 'customer').map(l => l.text);
-    const combined = customerTexts.join('. ').slice(0, 4000);
-    if (!combined) return;
+    const customerTexts = getLogsArray().filter(l => l.sender === 'customer').map(l => l.text)
+    const combined = customerTexts.join('. ').slice(0, 4000)
 
-    // Classify with Gemini: positive vs other
-    const cls = await classifyFeedback(combined);
-    if (cls === 'positive') {
-      log('agent', 'AI', 'Classified as positive feedback — thanking customer.');
-      // await speakText(session, THANK_YOU, false); // Swarvam AI disabled
-      try {
-        const audioBuffer = await getLocalAudio('ending-positive.mp3');
-        if (audioBuffer) await streamAudio(audioBuffer, session.rtpIp, session.rtpPort, session.rtpSocket);
-      } catch (e) { console.warn('Missing ending-positive.mp3'); }
-      return;
+    // Always play a closing greeting to make the conversation smooth and human-like
+    if (!combined) {
+      log('agent', 'AI', 'No feedback detected, closing call gracefully.')
+      await playAudio(session, 'ending-positive.mp3')
+      return
     }
 
-    // For non-positive feedback, use the requested Hindi phrase
-    const escalateMsg = 'OK sir  Hamari team aapse jald hi contact karegi  Thank you for your feedback ';
+    const category = await classifyFeedback(combined)
+    if (category === 'positive') {
+      log('agent', 'AI', 'Classified as positive feedback — thanking customer.')
+      await playAudio(session, 'ending-positive.mp3')
+      return
+    }
 
-    log('agent', 'AI', escalateMsg);
-    // await speakText(session, escalateMsg, false); // Swarvam AI disabled
-    try {
-      const audioBuffer = await getLocalAudio('ending-negetive.mp3');
-      if (audioBuffer) await streamAudio(audioBuffer, session.rtpIp, session.rtpPort, session.rtpSocket);
-    } catch (e) { console.warn('Missing ending-negetive.mp3'); }
+    const escalateMsg = 'OK sir Hamari team aapse jald hi contact karegi Thank you for your feedback'
+    log('agent', 'AI', escalateMsg)
+    await playAudio(session, 'ending-negetive.mp3')
 
-    // Flag customer for support follow-up (unawaited for speed)
-    (async () => {
-      try {
-        await db.from('support_queue').insert([{ phone: null, notes: combined }]);
-      } catch (err) {
-        console.warn('[DB] Failed to insert support queue', err.message);
-      }
-    })();
+    // Record for support follow-up
+    db.from('support_queue').insert([{ phone: null, notes: combined }]).catch(err => {
+      console.warn('[DB] Support queue insert error:', err.message)
+    })
   } catch (err) {
-    console.warn('[LLM] analyze failed', err.message);
+    console.warn('[Analysis] Analysis failed:', err.message)
+    // Fallback ending on error
+    await playAudio(session, 'ending-positive.mp3').catch(() => { })
   }
-}
-
-async function speakThankYou(session) {
-  await speakText(session, THANK_YOU);
 }
 
 async function cleanupSession() {
+  if (!activeSession) return
   try {
-    if (session?.endCall) await session.endCall();
-    if (session?.socket) session.socket.close();
-    if (session?.rtpSocket) session.rtpSocket.close();
+    if (activeSession.endCall) await activeSession.endCall()
+    if (activeSession.socket) activeSession.socket.close()
+    if (activeSession.rtpSocket) activeSession.rtpSocket.close()
   } catch (err) {
-    console.warn('[Session] Cleanup error', err.message);
+    console.warn('[Session] Cleanup error:', err.message)
   }
-  session = null;
+  activeSession = null
 }
-
-
-
-
-
-
 
 // --- API Controllers ---
 async function startCall(req, res) {
-  const { name = 'Customer', phone, voice } = req.body || {};
+  const { name = 'Customer', phone } = req.body || {}
 
-  if (!phone) return res.status(400).json({ success: false, msg: 'Phone required' });
-  const target = phone.replace(/\D/g, '');
-  if (target.length < 10) return res.status(400).json({ success: false, msg: 'Invalid phone' });
-  if (session) return res.status(409).json({ success: false, msg: 'Call in progress' });
+  if (!phone) return res.status(400).json({ success: false, msg: 'Phone required' })
+  const target = phone.replace(/\D/g, '')
+  if (target.length < 10) return res.status(400).json({ success: false, msg: 'Invalid phone' })
+  if (activeSession) return res.status(409).json({ success: false, msg: 'Call in progress' })
 
-  resetLogs();
+  resetLogs()
 
   try {
-    session = await makeSipCall(target);
-    res.json({ success: true, message: `Connected to ${target}`, logs: getLogsArray() });
+    activeSession = await makeSipCall(target)
+    res.json({ success: true, message: `Connected to ${target}`, logs: getLogsArray() })
 
-    if (session) {
-      session.selectedVoice = voice || process.env.SWARVAM_VOICE || undefined;
-
-      // Pre-generate TTS in background to make response instantaneous
-      // generateSpeech(THANK_YOU, { voiceId: session.selectedVoice, rate: SWARVAM_RATE }).catch(() => { });
-      // generateSpeech('ok sir. Hamari team aapse jald hi contact karegi. feedback dene ke liye dhanywad ', { voiceId: session.selectedVoice, rate: SWARVAM_RATE }).catch(() => { });
-
-      await playGreeting(session);
-      await captureAndStoreFeedback(session, name, target, 8000);
-      await analyzeAndRespond(session);
+    if (activeSession) {
+      await playGreeting(activeSession)
+      await captureAndStoreFeedback(activeSession, name, target, 8000)
+      await analyzeAndRespond(activeSession)
     }
 
-    await cleanupSession();
-    log('agent', 'System', 'Call ended successfully.');
+    await cleanupSession()
+    log('agent', 'System', 'Call ended successfully.')
   } catch (err) {
-    await cleanupSession();
-    log('agent', 'System', `Call Error: ${err.message}`);
-    if (!res.headersSent) res.status(500).json({ success: false, msg: err.message, logs: getLogsArray() });
+    await cleanupSession()
+    log('agent', 'System', `Call Error: ${err.message}`)
+    if (!res.headersSent) res.status(500).json({ success: false, msg: err.message, logs: getLogsArray() })
   }
 }
 
-async function cancelCall(req, res) {
-  if (!session) return res.json({ success: true, message: 'No active call', logs: getLogsArray() });
 
-  await cleanupSession();
-  log('agent', 'System', 'Call cancelled.');
-  res.json({ success: true, logs: getLogsArray() });
+
+
+
+async function cancelCall(req, res) {
+  if (!activeSession) return res.json({ success: true, message: 'No active call', logs: getLogsArray() })
+  await cleanupSession()
+  log('agent', 'System', 'Call cancelled.')
+  res.json({ success: true, logs: getLogsArray() })
 }
 
 function getLogs(req, res) {
-  res.json({ success: true, logs: getLogsArray() });
+  res.json({ success: true, logs: getLogsArray() })
 }
 
 module.exports = { startCall, cancelCall, getLogs }
