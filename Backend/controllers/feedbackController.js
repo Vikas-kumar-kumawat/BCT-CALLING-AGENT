@@ -2,8 +2,7 @@ const { makeSipCall } = require('../services/sip')
 const { getLocalAudio } = require('../services/audioService')
 const { streamAudio } = require('../services/rtpService')
 const { captureRtpStream, transcribeAudio } = require('../services/sttService')
-const { analyzeFeedback } = require('../services/groqService')
-const { classifyFeedback } = require('../services/geminiService')
+const { classifyFeedback } = require('../services/groqService')
 const db = require('../config/supabase')
 const { log, getLogs: getLogsArray, resetLogs, generateSpeech } = require('../services/feedbackService')
 const { GREETING, THANK_YOU, SWARVAM_VOICE_ID, SWARVAM_RATE } = require('../config/voiceConfig')
@@ -155,9 +154,13 @@ async function analyzeAndRespond(session) {
     } catch (e) { console.warn('Missing ending-negetive.mp3'); }
 
     // Flag customer for support follow-up (unawaited for speed)
-    db.from('support_queue').insert([{ phone: null, notes: combined }]).catch(err => {
-      console.warn('[DB] Failed to insert support queue', err.message);
-    });
+    (async () => {
+      try {
+        await db.from('support_queue').insert([{ phone: null, notes: combined }]);
+      } catch (err) {
+        console.warn('[DB] Failed to insert support queue', err.message);
+      }
+    })();
   } catch (err) {
     console.warn('[LLM] analyze failed', err.message);
   }

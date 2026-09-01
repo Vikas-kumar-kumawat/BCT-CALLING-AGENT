@@ -1,43 +1,51 @@
 const fetch = (...args) => (globalThis.fetch ? globalThis.fetch(...args) : import('node-fetch').then(({ default: f }) => f(...args)))
 
-const GROQ_API_URL = process.env.GROQ_API_URL || ''
 const GROQ_API_KEY = process.env.GROQ_API_KEY || ''
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
-function fallbackAnalyze(text) {
+function fallbackClassify(text) {
   const t = (text || '').toLowerCase()
-  if (!t) return null
-  if (t.includes('slow') || t.includes('speed') || t.includes('latency'))
-    return 'We detected performance issues. Offer a speed test and check the router. Ask for permission to schedule a technician.'
-  if (t.includes('no') && (t.includes('internet') || t.includes('connect'))) 
-    return 'Connection seems down. Ask the customer to restart the router and check cables. Offer to escalate if unresolved.'
-  return 'Thank you for your feedback. We will record this and a team member will follow up if needed.'
+  if (!t) return 'other'
+  if (t.includes('slow') || t.includes('speed') || t.includes('latency') || t.includes('no internet') || t.includes('bad') || t.includes('worst') || t.includes('not working') || t.includes('error') || t.includes('issue')) return 'other'
+  if (t.includes('good') || t.includes('great') || t.includes('excellent') || t.includes('fine') || t.includes('working') || t.includes('best') || t.includes('awesome') || t.includes('nice') || t.includes('ok')) return 'positive'
+  return 'other'
 }
 
-async function analyzeFeedback(text) {
-  if (!text || !text.trim()) return null
-  if (!GROQ_API_URL || !GROQ_API_KEY) {
-    return fallbackAnalyze(text)
+async function classifyFeedback(text) {
+  if (!text || !text.trim()) return 'other'
+  if (!GROQ_API_KEY) {
+    return fallbackClassify(text)
   }
 
   try {
     const res = await fetch(GROQ_API_URL, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input: text, max_output_tokens: 200 })
+      headers: {
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'groq/compound-mini',
+        messages: [{ role: 'user', content: `Classify this customer feedback as exactly "positive" or "other". Respond with only one word in lowercase. Feedback: "${text}"` }],
+        max_tokens: 10,
+        temperature: 0.1
+      })
     })
+
     if (!res.ok) {
-      console.error('[GROQ]', res.status, await res.text())
-      return fallbackAnalyze(text)
+      console.warn('[GROQ CLASSIFY] HTTP Error', res.status)
+      return fallbackClassify(text)
     }
+
     const data = await res.json()
-    // Try to extract a reasonable text field from common response shapes
-    if (typeof data === 'string') return data
-    const out = data.output_text || (data.output && data.output[0] && data.output[0].content) || data.result || JSON.stringify(data)
-    return (out && typeof out === 'string') ? out : JSON.stringify(out)
+    const result = data.choices?.[0]?.message?.content?.trim()?.toLowerCase() || ''
+    
+    if (result.includes('positive')) return 'positive'
+    return 'other'
   } catch (e) {
-    console.error('[GROQ] Error', e.message)
-    return fallbackAnalyze(text)
+    console.warn('[GROQ CLASSIFY] Error', e.message)
+    return fallbackClassify(text)
   }
 }
 
-module.exports = { analyzeFeedback }
+module.exports = { classifyFeedback }

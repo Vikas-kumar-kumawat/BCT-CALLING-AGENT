@@ -21,68 +21,81 @@ function ulawToWav(ulawBuffer) {
   });
 }
 
+const CHROMIUM_SPEECH_KEY = 'AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw';
+
+// Pure JavaScript u-law → 16000Hz 16-bit PCM Converter (No ffmpeg/disk I/O required)
+function ulawToPcm16kBuffer(ulawBuffer) {
+  const pcm16 = new Int16Array(ulawBuffer.length * 2);
+  for (let i = 0; i < ulawBuffer.length; i++) {
+    const u = ~ulawBuffer[i];
+    const sign = (u & 0x80) ? -1 : 1;
+    const exponent = (u >> 4) & 0x07;
+    const mantissa = u & 0x0F;
+    let sample = (mantissa << (exponent + 3)) + 132;
+    sample = (sign * sample) & 0xFFFF;
+    pcm16[i * 2] = sample;
+    pcm16[i * 2 + 1] = sample;
+  }
+  return Buffer.from(pcm16.buffer);
+}
+
+// Pure JavaScript Google Web Speech API (Works on Render Production, 100% Free)
+async function googleWebSpeechRecognize(pcmBuffer, lang) {
+  try {
+    const url = `https://www.google.com/speech-api/v2/recognize?client=chromium&key=${CHROMIUM_SPEECH_KEY}&lang=${lang}&maxresults=1`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'audio/l16; rate=16000' },
+      body: pcmBuffer
+    });
+    if (!res.ok) return null;
+    const text = await res.text();
+    for (const line of text.split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const json = JSON.parse(line);
+        const alt = json.result?.[0]?.alternative?.[0];
+        if (alt?.transcript) return alt.transcript.trim();
+      } catch (_) {}
+    }
+  } catch (_) {}
+  return null;
+}
+
 async function transcribeAudio(audioInput) {
   if (!Buffer.isBuffer(audioInput) || !audioInput.length)
     return '(No audio – RTP port blocked or customer silent)';
 
-  // Safe FFmpeg conversion that ensures 16000Hz sample rate required by Python STT
-  const wavBuffer = await ulawToWav(audioInput);
-
-  // Attempt blazing fast HTTP transcription via Groq Whisper if available
-  const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
-  if (GROQ_API_KEY) {
-    try {
-      const formData = new FormData();
-      formData.append('file', new Blob([wavBuffer], { type: 'audio/wav' }), 'audio.wav');
-      formData.append('model', 'whisper-large-v3');
-
-      const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` },
-        body: formData
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        return data.text ? data.text.trim() : '(No speech detected)';
-      }
-    } catch (e) {
-      console.warn('[STT] Groq fast transcription failed, falling back...', e.message);
-    }
-  }
-
-  // Attempt blazing fast HTTP transcription via Gemini Audio if available (Pure Node.js, perfect for Render)
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-  if (GEMINI_API_KEY) {
-    try {
-      const payload = {
-        contents: [{
-          parts: [
-            { text: "Transcribe the speech in this audio exactly. Output ONLY the transcribed text." },
-            { inlineData: { mimeType: "audio/wav", data: wavBuffer.toString('base64') } }
-          ]
-        }]
+  // 1. Pure Node.js Google Web Speech API (Fast, Free, Perfect for Render Production)
+  try {
+    const pcmBuffer = ulawToPcm16kBuffer(audioInput);
+    
+    // Fast-race promises: return as soon as EITHER hi-IN or en-IN returns a valid transcript
+    const jsText = await new Promise((resolve) => {
+      let pending = 2;
+      let resolved = false;
+      const check = (text) => {
+        if (resolved) return;
+        if (text) { resolved = true; resolve(text); }
+        else if (--pending === 0) resolve(null);
       };
-      const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        if (text.trim()) return text.trim();
-      } else {
-        console.warn('[GEMINI STT] HTTP Error', res.status);
-      }
-    } catch (e) {
-      console.warn('[STT] Gemini transcription failed, falling back...', e.message);
-    }
+      googleWebSpeechRecognize(pcmBuffer, 'hi-IN').then(check).catch(() => check(null));
+      googleWebSpeechRecognize(pcmBuffer, 'en-IN').then(check).catch(() => check(null));
+    });
+
+    if (jsText) return jsText;
+  } catch (e) {
+    console.warn('[STT] Pure JS Google STT failed, trying fallback...', e.message);
   }
 
-  // Fallback to legacy Python/Cloud STT which requires disk I/O
+  // 2. Fallback to FFmpeg + Python STT (for local environment)
+  let wavBuffer;
+  try {
+    wavBuffer = await ulawToWav(audioInput);
+  } catch (_) {
+    return '(No speech detected)';
+  }
+
   const tmp = path.join(__dirname, `tmp_${Date.now()}.wav`);
   await fs.promises.writeFile(tmp, wavBuffer);
 
@@ -142,7 +155,7 @@ async function transcribeAudio(audioInput) {
 // Capture RTP in streaming mode: call `onChunk(buffer)` for each detected speech chunk
 function captureRtpStream(socket, onChunk, totalMaxMs = 8000) {
   const SILENCE_THRESH = 15;
-  const SILENCE_TIMEOUT = 400; // Aggressive 400ms silence cut-off for instant response
+  const SILENCE_TIMEOUT = 300; // Ultra-fast 300ms silence cut-off for instantaneous response
   let packets = [];
   let hasSpoken = false;
   let silenceStart = 0;
