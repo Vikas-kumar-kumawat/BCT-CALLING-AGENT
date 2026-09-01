@@ -1,4 +1,4 @@
-const fetch = require('node-fetch')
+const fetch = (...args) => (globalThis.fetch ? globalThis.fetch(...args) : import('node-fetch').then(({ default: f }) => f(...args)))
 
 const GROQ_API_URL = process.env.GROQ_API_URL || ''
 const GROQ_API_KEY = process.env.GROQ_API_KEY || ''

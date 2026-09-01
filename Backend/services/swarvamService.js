@@ -7,7 +7,7 @@ const DEFAULT_SWARVAM_API_URL = 'https://api.sarvam.ai/text-to-speech'
 const SWARVAM_API_URL = process.env.SWARVAM_API_URL || DEFAULT_SWARVAM_API_URL
 const SWARVAM_API_KEY = process.env.SWARVAM_API_KEY || ''
 
-const fetch = global.fetch || require('node-fetch')
+const fetch = (...args) => (globalThis.fetch ? globalThis.fetch(...args) : import('node-fetch').then(({ default: f }) => f(...args)))
 
 async function generateSpeechAudio(text, { voiceId = 'shubh', voiceSettings = {} } = {}) {
   if (!SWARVAM_API_KEY) {

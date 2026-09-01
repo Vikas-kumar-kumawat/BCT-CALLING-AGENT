@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const { spawn, spawnSync } = require('child_process')
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path
-const fetch = require('node-fetch')
+const fetch = (...args) => (globalThis.fetch ? globalThis.fetch(...args) : import('node-fetch').then(({ default: f }) => f(...args)))
 
 const PY_SCRIPT = path.join(__dirname, 'python_stt.py')
 
