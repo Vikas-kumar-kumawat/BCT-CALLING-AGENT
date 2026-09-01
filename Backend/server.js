@@ -40,6 +40,8 @@ app.use('/api/feedbackcalls', require('./routes/feedbackcalls'))
 app.use('/api/support', require('./routes/supportRouter'))
 app.use('/api/salesagent', require('./routes/salesAgentRouter'))
 app.use('/api/customers', require('./routes/customersRouter'))
+app.use('/api/tts', require('./routes/ttsRouter'))
+app.use('/api/diagnostics', require('./routes/diagnosticsRouter'))
 
 
 
@@ -61,6 +63,12 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`)
   if (!process.env.RENDER_EXTERNAL_URL && !process.env.BASE_URL)
     require('./config/tunnel').startTunnel(port)
+
+  // Pre-cache voice audio used by feedback flows
+  try {
+    const fb = require('./services/feedbackService')
+    if (fb && typeof fb.initPrecache === 'function') fb.initPrecache().catch(()=>{})
+  } catch (_) {}
 })
 
 process.stdin.resume()

@@ -1,7 +1,7 @@
 const { startInboundServer, isInboundActive } = require('../../services/sip')
 const { getLocalAudio } = require('../../services/audioService')
 const { streamAudio }   = require('../../services/rtpService')
-const { generateSpeechAudio: tts } = require('../../services/elevenlabsService')
+const { generateSpeech } = require('../../services/feedbackService')
 const { captureRtpAudio: capRtp, transcribeAudio: stt } = require('../../services/sttService')
 
 const GREETING = 'Welcome to the newly updated BCT Support system. Press 1 for complaint, 2 for new connection, 3 for billing, 4 for support.'
@@ -28,15 +28,15 @@ const handleInboundCall = async (ip, port, sock) => {
   calls++
   console.log(`\n[NEW SUPPORT CODE] Inbound call connected from ${ip}:${port}`)
   log('customer', 'Customer', `Inbound call connected from ${ip}:${port}`)
-  try {
-    const gFile = await tts(GREETING)
-    if (gFile) {
-      console.log(`[NEW SUPPORT CODE] Playing IVR Greeting...`)
-      await streamAudio(await getLocalAudio(gFile), ip, port, sock)
+    try {
+      const gFile = await generateSpeech(GREETING)
+      if (gFile) {
+        console.log(`[NEW SUPPORT CODE] Playing IVR Greeting...`)
+        await streamAudio(await getLocalAudio(gFile), ip, port, sock)
+      }
+    } catch (e) {
+      console.error('[Inbound Audio Error]', e.message)
     }
-  } catch (e) {
-    console.error('[Inbound Audio Error]', e.message)
-  }
   log('agent', 'IVR', GREETING)
 }
 
@@ -55,7 +55,7 @@ module.exports = {
     } catch (e) { res.status(500).json({ success: false, msg: e.message, logs }) }
   },
   selectOption: async (req, res) => {
-    const { option: o, name = 'Vikas', phone = '9057262630' } = req.body || {}
+    const { option: o, name = 'Vikas', phone = '9057262630', voice } = req.body || {}
     if (!o) return res.status(400).json({ success: false })
     log('customer', 'Customer', `Pressed [${o}]`)
     const opt = OPTS[o], txt = opt ? opt.txt : 'Invalid. Press 1-4.'
@@ -69,7 +69,10 @@ module.exports = {
     
     if (session) {
       if (opt?.a) getLocalAudio(opt.a).then(a => streamAudio(a, session.ip, session.port, session.sock)).catch(()=>{})
-      if (opt) tts(txt).then(f => f && getLocalAudio(f).then(a => streamAudio(a, session.ip, session.port, session.sock)).catch(()=>{})).catch(()=>{})
+      if (opt) {
+        const voiceId = voice || process.env.SWARVAM_VOICE || undefined
+        generateSpeech(txt, { voiceId }).then(f => f && getLocalAudio(f).then(a => streamAudio(a, session.ip, session.port, session.sock)).catch(()=>{})).catch(()=>{})
+      }
     }
     res.json({ success: true, logs, complaints: comps })
   },

@@ -316,7 +316,18 @@ async function startInboundServer(onCallAnswered) {
   })
 
   sock.on('error', e => console.error('[SIP Inbound]', e.message))
-  await new Promise((ok, fail) => sock.bind(localPort, e => e ? fail(e) : ok()))
+  // Try to bind preferred localPort; on EADDRINUSE fallback to ephemeral port
+  await new Promise((ok, fail) => {
+    sock.bind(localPort, (e) => {
+      if (!e) return ok()
+      if (e && e.code === 'EADDRINUSE') {
+        console.warn(`[SIP Inbound] preferred port ${localPort} in use, falling back to ephemeral port`)
+        // try ephemeral port
+        return sock.bind(0, (e2) => e2 ? fail(e2) : ok())
+      }
+      return fail(e)
+    })
+  })
 
   await doRegister(sock, localIp, localPort, serverIp, serverPort, user, pass, listeners)
 

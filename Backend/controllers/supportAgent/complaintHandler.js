@@ -5,14 +5,13 @@
  * 3. Respond: "Your complaint is registered and our technical team will reach you as soon as possible."
  */
 const { transcribeAudio, captureRtpAudio } = require('../../services/sttService');
-const { generateSpeechAudio } = require('../../services/elevenlabsService');
+const { generateSpeech } = require('../../services/feedbackService');
 
 
 
 
 async function handleComplaint(params = {}) {
-
-  const { callerId, dtmfKey, context } = params;
+  const { callerId, dtmfKey, context, voice } = params;
   const socket = context ? context.socket : null;
   const customerAudio = context ? context.customerAudio : null;
 
@@ -46,13 +45,14 @@ async function handleComplaint(params = {}) {
 
   console.log(`[Complaint Registered] #${ticketNumber} | Issue: "${recordedIssue}"`);
 
-  // Optionally pre-generate or fetch ElevenLabs audio filename
-  let audioFilename = 'audio24.mp3';
+  // Optionally pre-generate Swarvam TTS for confirmation
+  let audioFilename = 'audio24.mp3'
   try {
-    const ttsFilename = await generateSpeechAudio(responseText);
-    if (ttsFilename) audioFilename = ttsFilename;
+    const voiceId = voice || process.env.SWARVAM_VOICE || undefined
+    const ttsFilename = await generateSpeech(responseText, { voiceId })
+    if (ttsFilename) audioFilename = ttsFilename
   } catch (e) {
-    console.warn('[Complaint Audio Warning]', e.message);
+    console.warn('[Complaint Audio Warning]', e.message)
   }
 
   return {

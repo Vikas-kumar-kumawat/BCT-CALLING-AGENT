@@ -5,6 +5,7 @@ import RechargeReminder from './pages/RechargeReminder'
 import PlanPromotion from './pages/PlanPromotion'
 import SalesAgent from './pages/SalesAgent'
 import InboundCalls from './pages/InboundCalls'
+import Settings from './pages/Settings'
 import {
   LayoutDashboard, PhoneCall, Briefcase, CreditCard,
   Sparkles, Headphones, ChevronLeft, ChevronRight, Moon, Sun, Menu, X, Radio
@@ -13,6 +14,7 @@ import {
 const PAGE_LABELS = {
   home: 'Dashboard', feedback: 'Feedback Calls', sales: 'Sales Agent',
   recharge: 'Recharge Reminder', promotion: 'Plan Promotion', inbound: 'Customer Support',
+    settings: 'Settings'
 }
 
 export default function App() {
@@ -85,6 +87,9 @@ export default function App() {
           {inboundItems.map(item => (
             <NavItem key={item.id} {...item} active={tab === item.id} collapsed={collapsed} onClick={() => navigate(item.id)} />
           ))}
+        </div>
+        <div className="mt-3 px-2">
+          <NavItem id="settings" label="Settings" icon={Radio} active={tab === 'settings'} collapsed={collapsed} onClick={() => navigate('settings')} />
         </div>
       </nav>
 
@@ -171,6 +176,7 @@ export default function App() {
             {tab === 'recharge'  && <RechargeReminder />}
             {tab === 'promotion' && <PlanPromotion />}
             {tab === 'inbound'   && <InboundCalls />}
+            {tab === 'settings'  && <Settings />}
           </div>
         </main>
       </div>

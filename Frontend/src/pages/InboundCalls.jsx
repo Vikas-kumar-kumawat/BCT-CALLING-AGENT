@@ -24,10 +24,11 @@ export default function InboundCalls() {
   const handleSelectOption = async (optionKey) => {
     setActiveOption(optionKey)
     try {
+      const selectedVoice = localStorage.getItem('swarvam-voice')
       const res = await fetch(getApiUrl('/api/support/option'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ option: optionKey, name: 'Vikas', phone: '9057262630' })
+        body: JSON.stringify({ option: optionKey, name: 'Vikas', phone: '9057262630', voice: selectedVoice })
       })
       if (res.ok) fetchComplaints()
     } catch (err) { console.error(err) }
@@ -42,10 +43,12 @@ export default function InboundCalls() {
 
   const handleAddComplaint = async (newComplaint) => {
     try {
+      const selectedVoice = localStorage.getItem('swarvam-voice')
+      const payload = Object.assign({}, newComplaint, { voice: selectedVoice })
       const res = await fetch(getApiUrl('/api/support/complaints'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newComplaint)
+        body: JSON.stringify(payload)
       })
       if (res.ok) fetchComplaints()
     } catch (err) { console.error(err) }

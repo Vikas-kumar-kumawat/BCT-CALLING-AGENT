@@ -16,6 +16,7 @@ function streamAudio(ulawBuffer, remoteIp, remotePort, socket) {
       return h
     }
 
+    const start = Date.now()
     const send = () => {
       if (closed || offset >= ulawBuffer.length) return ok()
       const payload = ulawBuffer.slice(offset, offset + FRAME)
@@ -25,7 +26,11 @@ function streamAudio(ulawBuffer, remoteIp, remotePort, socket) {
           remotePort, remoteIp, err => { if (err) { closed = true; ok() } })
       } catch { closed = true; ok(); return }
       ts += FRAME
-      setTimeout(send, INTERVAL)
+      
+      const elapsed = Date.now() - start
+      const targetTime = (offset / FRAME) * INTERVAL
+      const wait = Math.max(0, targetTime - elapsed)
+      setTimeout(send, wait)
     }
 
     send()

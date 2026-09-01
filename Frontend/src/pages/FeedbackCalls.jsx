@@ -42,10 +42,11 @@ export default function FeedbackCalls() {
     if (customer) { setActiveCallId(customer.id); handleSelectCustomer(customer) }
 
     try {
+      const selectedVoice = localStorage.getItem('swarvam-voice')
       const res = await fetch(getApiUrl('/api/feedbackcalls'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: targetName, phone: targetPhone })
+        body: JSON.stringify({ name: targetName, phone: targetPhone, voice: selectedVoice })
       })
       const data = await res.json()
       setStatus(res.ok ? data.message || 'Call initiated!' : `Call failed: ${data.message}`)
