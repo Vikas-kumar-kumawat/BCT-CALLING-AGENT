@@ -160,7 +160,20 @@ async function makeSipCall(targetPhone) {
 
   await new Promise((ok, fail) => sipSock.bind(0, e => e ? fail(e) : ok()))
   const localPort = sipSock.address().port
-  await new Promise((ok, fail) => rtpSock.bind(0, e => e ? fail(e) : ok()))
+  
+  // Asterisk requires RTP ports to be in a specific range (usually 10000-20000) and even.
+  // We scan for a free even port starting at 15000 to support concurrent calls.
+  await new Promise((ok, fail) => {
+    const tryBind = (port) => {
+      if (port > 16000) return rtpSock.bind(0, e => e ? fail(e) : ok()); // Fallback
+      rtpSock.bind(port, (e) => {
+        if (!e) return ok();
+        if (e.code === 'EADDRINUSE') return tryBind(port + 2);
+        fail(e);
+      });
+    };
+    tryBind(15000);
+  });
   const localRtpPort = rtpSock.address().port
 
   try {

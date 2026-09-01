@@ -1,5 +1,5 @@
 // sttService.js – Speech-to-Text: u-law → WAV via ffmpeg → Google Web Speech via Python
-const fs   = require('fs')
+const fs = require('fs')
 const path = require('path')
 const { spawn, spawnSync } = require('child_process')
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path
@@ -12,10 +12,10 @@ function ulawToWav(ulawBuffer) {
     const chunks = [];
     const ff = spawn(ffmpegPath, ['-f', 'mulaw', '-ar', '8000', '-ac', '1', '-i', 'pipe:0',
       '-f', 'wav', '-ar', '16000', 'pipe:1']);
-    ff.stdin.write(ulawBuffer); 
+    ff.stdin.write(ulawBuffer);
     ff.stdin.end();
     ff.stdout.on('data', c => chunks.push(c));
-    ff.stderr.on('data', () => {});
+    ff.stderr.on('data', () => { });
     ff.on('close', code => chunks.length ? ok(Buffer.concat(chunks)) : fail(new Error(`ffmpeg exit ${code}`)));
     ff.on('error', fail);
   });
@@ -41,13 +41,44 @@ async function transcribeAudio(audioInput) {
         headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` },
         body: formData
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         return data.text ? data.text.trim() : '(No speech detected)';
       }
     } catch (e) {
       console.warn('[STT] Groq fast transcription failed, falling back...', e.message);
+    }
+  }
+
+  // Attempt blazing fast HTTP transcription via Gemini Audio if available (Pure Node.js, perfect for Render)
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+  if (GEMINI_API_KEY) {
+    try {
+      const payload = {
+        contents: [{
+          parts: [
+            { text: "Transcribe the speech in this audio exactly. Output ONLY the transcribed text." },
+            { inlineData: { mimeType: "audio/wav", data: wavBuffer.toString('base64') } }
+          ]
+        }]
+      };
+      const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (text.trim()) return text.trim();
+      } else {
+        console.warn('[GEMINI STT] HTTP Error', res.status);
+      }
+    } catch (e) {
+      console.warn('[STT] Gemini transcription failed, falling back...', e.message);
     }
   }
 
@@ -96,13 +127,13 @@ async function transcribeAudio(audioInput) {
     py.stderr.setEncoding('utf8');
     py.stderr.on('data', d => err += d);
     py.on('close', code => {
-      try { fs.unlinkSync(tmp) } catch (_) {}
+      try { fs.unlinkSync(tmp) } catch (_) { }
       const txt = (out || '').trim();
       if (txt.startsWith('ERROR:') || err) return resolve(`(STT Error: ${err || txt})`);
       resolve(txt || '(No speech detected)');
     });
     py.on('error', e => {
-      try { fs.unlinkSync(tmp) } catch (_) {}
+      try { fs.unlinkSync(tmp) } catch (_) { }
       resolve(`(STT Error: ${e.message})`);
     });
   });
@@ -143,7 +174,7 @@ function captureRtpStream(socket, onChunk, totalMaxMs = 8000) {
         packets = [];
         hasSpoken = false;
         silenceStart = 0;
-        try { onChunk(chunk) } catch (_) {}
+        try { onChunk(chunk) } catch (_) { }
       }
     }
   }
@@ -160,18 +191,18 @@ function captureRtpAudio(socket, maxDurationMs = 5000) {
     let timeoutId = null;
     const SILENCE_THRESH = 15;
     const SILENCE_TIMEOUT = 600; // Cut dead-air detection to 600ms
-    
+
     const resolveAndClean = () => {
       socket?.removeListener('message', onMsg);
       clearTimeout(timeoutId);
       ok(Buffer.concat(packets));
     };
 
-    const onMsg = msg => { 
+    const onMsg = msg => {
       if (msg.length <= 12) return;
       const payload = msg.slice(12);
       packets.push(payload);
-      
+
       let energy = 0;
       for (let i = 0; i < payload.length; i++) energy += (~payload[i]) & 0x7F;
       energy /= payload.length;
@@ -184,7 +215,7 @@ function captureRtpAudio(socket, maxDurationMs = 5000) {
         else if (Date.now() - silenceStart > SILENCE_TIMEOUT) resolveAndClean();
       }
     };
-    
+
     socket?.on('message', onMsg);
     timeoutId = setTimeout(resolveAndClean, maxDurationMs);
   });
