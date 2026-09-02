@@ -119,33 +119,14 @@ export default function App() {
       }}>
         {(!collapsed || showClose) && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Meta-style logo mark — colored square */}
             <div style={{
-              width: '24px',
-              height: '24px',
-              borderRadius: '6px',
-              background: 'linear-gradient(135deg, #0064E0 0%, #47A5FA 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '15px',
+              fontWeight: 800,
+              letterSpacing: '-0.03em',
+              color: 'var(--text-primary)',
             }}>
-              <span style={{ color: '#fff', fontSize: '11px', fontWeight: 800, fontFamily: 'Inter, sans-serif' }}>B</span>
-            </div>
-            <div>
-              <div style={{
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '14px',
-                fontWeight: 700,
-                letterSpacing: '-0.02em',
-                color: 'var(--text-primary)',
-                lineHeight: 1.2,
-              }}>
-                BCT <span style={{ color: 'var(--accent-light)' }}>Fibernet</span>
-              </div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'Inter, sans-serif', letterSpacing: '0.02em' }}>
-                AI Platform
-              </div>
+              BCT <span style={{ color: 'var(--accent-light)' }}>Fibernet</span>
             </div>
           </div>
         )}
@@ -155,12 +136,13 @@ export default function App() {
           <div
             onClick={() => setIsSidebarOpen(true)}
             style={{
-              width: '28px', height: '28px', borderRadius: '7px',
-              background: 'linear-gradient(135deg, #0064E0 0%, #47A5FA 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '14px',
+              fontWeight: 800,
+              color: 'var(--accent-light)',
               cursor: 'pointer',
             }}>
-            <span style={{ color: '#fff', fontSize: '12px', fontWeight: 800, fontFamily: 'Inter, sans-serif' }}>B</span>
+            B
           </div>
         )}
 
@@ -192,39 +174,9 @@ export default function App() {
       </div>
 
       {/* ── Nav ─────────────────────────────────────────────────────── */}
-      <nav style={{ flex: 1, overflowY: 'auto', paddingTop: '8px', paddingBottom: '8px' }} className="custom-scrollbar">
-
-        <NavGroup label={!collapsed ? '' : null}>
-          <NavItem label="Dashboard" icon={LayoutDashboard} active={tab === 'home'} collapsed={collapsed} onClick={() => navigate('home')} />
-        </NavGroup>
-
-        {/* Divider */}
-        {!collapsed && (
-          <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }} />
-        )}
-
-        <NavGroup label={!collapsed ? 'Outbound' : null}>
-          <NavItem label="Feedback Calls" icon={PhoneCall} active={tab === 'feedback'} collapsed={collapsed} onClick={() => navigate('feedback')} />
-          <NavItem label="Sales Agent" icon={Briefcase} active={tab === 'sales'} collapsed={collapsed} onClick={() => navigate('sales')} />
-          <NavItem label="Recharge Reminder" icon={CreditCard} active={tab === 'recharge'} collapsed={collapsed} onClick={() => navigate('recharge')} />
-          <NavItem label="Plan Promotion" icon={Sparkles} active={tab === 'promotion'} collapsed={collapsed} onClick={() => navigate('promotion')} />
-        </NavGroup>
-
-        {!collapsed && (
-          <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }} />
-        )}
-
-        <NavGroup label={!collapsed ? 'Inbound' : null}>
-          <NavItem label="Customer Support" icon={Headphones} active={tab === 'inbound'} collapsed={collapsed} onClick={() => navigate('inbound')} />
-        </NavGroup>
-
-        {!collapsed && (
-          <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }} />
-        )}
-
-        <NavGroup label={!collapsed ? 'System' : null}>
-          <NavItem label="Settings" icon={Radio} active={tab === 'settings'} collapsed={collapsed} onClick={() => navigate('settings')} />
-        </NavGroup>
+      <nav style={{ flex: 1, overflowY: 'auto', paddingTop: '12px', paddingBottom: '12px' }} className="custom-scrollbar">
+        <NavItem label="Dashboard" icon={LayoutDashboard} active={tab === 'home'} collapsed={collapsed} onClick={() => navigate('home')} />
+        <NavItem label="Feedback Calls" icon={PhoneCall} active={tab === 'feedback'} collapsed={collapsed} onClick={() => navigate('feedback')} />
       </nav>
 
       {/* ── Footer ───────────────────────────────────────────────────── */}
@@ -327,56 +279,7 @@ export default function App() {
       {/* ── MAIN CONTENT ─────────────────────────────────────────────── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-        {/* Mobile top bar */}
-        <header
-          className="md:hidden"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0 16px', height: '56px', flexShrink: 0,
-            background: 'var(--sidebar-bg)',
-            borderBottom: '1px solid var(--sidebar-border)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button
-              onClick={() => setIsMobileDrawerOpen(true)}
-              style={{
-                background: 'transparent', border: '1px solid var(--border-subtle)',
-                color: 'var(--text-secondary)', borderRadius: '7px',
-                padding: '7px', cursor: 'pointer', display: 'flex',
-              }}
-            >
-              <Menu size={16} />
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{
-                width: '20px', height: '20px', borderRadius: '5px',
-                background: 'linear-gradient(135deg, #0064E0 0%, #47A5FA 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <span style={{ color: '#fff', fontSize: '10px', fontWeight: 800 }}>B</span>
-              </div>
-              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                BCT <span style={{ color: 'var(--accent-light)' }}>Fibernet</span>
-              </span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
-              {PAGE_LABELS[tab]}
-            </span>
-            <button
-              onClick={toggleTheme}
-              style={{
-                background: 'transparent', border: '1px solid var(--border-subtle)',
-                color: 'var(--text-secondary)', borderRadius: '7px',
-                padding: '7px', cursor: 'pointer', display: 'flex',
-              }}
-            >
-              {theme === 'dark' ? <Sun size={14} style={{ color: '#F7B928' }} /> : <Moon size={14} />}
-            </button>
-          </div>
-        </header>
+
 
         {/* Page content */}
         <main style={{ flex: 1, overflowY: 'auto', position: 'relative' }} className="custom-scrollbar">

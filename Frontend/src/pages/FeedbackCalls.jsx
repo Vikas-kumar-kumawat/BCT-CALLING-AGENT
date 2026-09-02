@@ -7,8 +7,8 @@ import { getApiUrl } from '../api'
 export default function FeedbackCalls() {
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('')
-  const [selectedCustomer, setSelectedCustomer] = useState({ id: null, name: 'Vikas', phone: '9057262630' })
-  const [phone, setPhone] = useState('9057262630')
+  const [selectedCustomer, setSelectedCustomer] = useState({ id: null, name: '', phone: '' })
+  const [phone, setPhone] = useState('')
   const [activeCallId, setActiveCallId] = useState(null)
   const { logs, displayedTextMap, fetchLogs } = useConversation('/api/feedbackcalls/logs')
 
@@ -76,11 +76,7 @@ export default function FeedbackCalls() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
 
-      {/* Header */}
-      <div className="space-y-1 pb-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <p style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)' }}>Outbound Campaign</p>
-        <h1 style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--text-primary)', fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 900, letterSpacing: '-0.03em' }}>Feedback Calls</h1>
-      </div>
+
 
       {/* Layout grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">

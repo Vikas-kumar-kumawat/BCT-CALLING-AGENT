@@ -15,8 +15,8 @@ export default function SupportStatsBar({ stats = {} }) {
         return (
           <div key={i} className="cg-card px-4 py-4 flex items-start justify-between">
             <div className="space-y-2 min-w-0">
-              <p className="forbes-label truncate">{item.label}</p>
-              <p style={{ fontFamily: 'Manrope, sans-serif', color: item.accent, fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1 }}>
+              <p className="meta-label truncate">{item.label}</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', color: item.accent, fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>
                 {item.value}
               </p>
             </div>

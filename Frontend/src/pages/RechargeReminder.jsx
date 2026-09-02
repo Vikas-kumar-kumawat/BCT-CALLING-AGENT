@@ -17,8 +17,8 @@ export default function RechargeReminder() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: 'Vikas',
-          phone: '9057262630',
+          name: 'Demo Customer',
+          phone: '+919999999999',
           plan: '100 Mbps Unlimited (₹799)'
         })
       })
@@ -44,9 +44,28 @@ export default function RechargeReminder() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="space-y-1 pb-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <p style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)' }}>Outbound Campaign</p>
-        <h1 style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--text-primary)', fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 900, letterSpacing: '-0.03em' }}>Recharge Reminder</h1>
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '6px',
+          marginBottom: '12px',
+          fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'Inter, sans-serif',
+        }}>
+          <span>BCT Fibernet</span>
+          <span>/</span>
+          <span>Outbound Campaigns</span>
+          <span>/</span>
+          <span style={{ color: 'var(--text-secondary)' }}>Recharge Reminder</span>
+        </div>
+        <h1 style={{
+          fontFamily: 'Inter, sans-serif',
+          fontSize: 'clamp(26px, 4vw, 34px)',
+          fontWeight: 800,
+          letterSpacing: '-0.03em',
+          color: 'var(--text-primary)',
+          lineHeight: 1.2,
+        }}>
+          Recharge Reminder
+        </h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

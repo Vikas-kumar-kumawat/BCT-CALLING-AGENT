@@ -30,8 +30,8 @@ export default function ComplaintsListCard({ complaints = [], onToggleStatus, on
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
           <div>
-            <p className="forbes-label-red mb-0.5">COMPLAINT CENTER</p>
-            <p style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }} className="font-bold text-lg leading-tight">
+            <p className="meta-label mb-0.5" style={{ color: 'var(--accent-light)' }}>Complaint Center</p>
+            <p style={{ fontFamily: 'Inter, sans-serif', color: 'var(--text-primary)' }} className="font-bold text-lg leading-tight">
               Customer Tickets
               <span className="ml-2 text-sm font-normal" style={{ color: 'var(--text-muted)', fontFamily: "'Inter', sans-serif" }}>
                 {complaints.length} active
@@ -68,12 +68,12 @@ export default function ComplaintsListCard({ complaints = [], onToggleStatus, on
         )}
 
         {/* Column labels */}
-        <div className="grid grid-cols-12 px-6 py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.02)' }}>
-          <span className="col-span-2 forbes-label">Ticket ID</span>
-          <span className="col-span-2 forbes-label">Customer</span>
-          <span className="col-span-5 forbes-label">Issue</span>
-          <span className="col-span-2 forbes-label">Status</span>
-          <span className="col-span-1 forbes-label text-right">Act</span>
+        <div className="grid grid-cols-12 px-6 py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--row-hover)' }}>
+          <span className="col-span-2 meta-label">Ticket ID</span>
+          <span className="col-span-2 meta-label">Customer</span>
+          <span className="col-span-5 meta-label">Issue</span>
+          <span className="col-span-2 meta-label">Status</span>
+          <span className="col-span-1 meta-label text-right">Act</span>
         </div>
 
         {/* Rows */}
@@ -138,10 +138,10 @@ export default function ComplaintsListCard({ complaints = [], onToggleStatus, on
             {/* Modal Header */}
             <div className="flex items-start justify-between px-6 py-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <div>
-                <p className="forbes-label-red mb-1">COMPLAINT DETAIL</p>
+                <p className="meta-label mb-1" style={{ color: 'var(--accent-light)' }}>Complaint Detail</p>
                 <div className="flex items-center gap-2.5">
                   <span className="text-[11px] font-mono font-bold" style={{ color: 'var(--text-muted)' }}>{selected.id}</span>
-                  <h3 style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }} className="font-bold text-xl leading-tight">
+                  <h3 style={{ fontFamily: 'Inter, sans-serif', color: 'var(--text-primary)' }} className="font-bold text-xl leading-tight">
                     {selected.customerName}
                   </h3>
                   <span className="text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>({selected.phone})</span>

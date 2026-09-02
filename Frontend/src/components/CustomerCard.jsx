@@ -5,8 +5,8 @@ export default function CustomerCard({ customerName = 'Customer', onCall, onCanc
     <div className="cg-card overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
         <div>
-          <p className="forbes-label-red mb-0.5">Target Profile</p>
-          <p style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>Active Recipient</p>
+          <p className="meta-label mb-0.5" style={{ color: 'var(--accent-light)' }}>Target Profile</p>
+          <p style={{ fontFamily: 'Inter, sans-serif', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>Active Recipient</p>
         </div>
         {status && <span className="text-[10px] font-mono truncate max-w-[150px] sm:max-w-[200px]" style={{ color: 'var(--text-muted)' }}>{status}</span>}
       </div>

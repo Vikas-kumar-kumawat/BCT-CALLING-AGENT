@@ -28,7 +28,7 @@ export default function InboundCalls() {
       const res = await fetch(getApiUrl('/api/support/option'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ option: optionKey, name: 'Vikas', phone: '9057262630', voice: selectedVoice })
+        body: JSON.stringify({ option: optionKey, name: 'Demo Customer', phone: '+919999999999', voice: selectedVoice })
       })
       if (res.ok) fetchComplaints()
     } catch (err) { console.error(err) }
@@ -58,10 +58,29 @@ export default function InboundCalls() {
     <div className="max-w-7xl mx-auto space-y-6">
 
       {/* Header */}
-      <div className="pb-5 flex items-start justify-between flex-wrap gap-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <div className="space-y-1">
-          <p style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)' }}>Inbound IVR</p>
-          <h1 style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--text-primary)', fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 900, letterSpacing: '-0.03em' }}>Customer Support</h1>
+      <div className="pb-5 flex items-start justify-between flex-wrap gap-4" style={{ borderBottom: '1px solid var(--border-subtle)', marginBottom: '32px' }}>
+        <div style={{ marginBottom: '0' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            marginBottom: '12px',
+            fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'Inter, sans-serif',
+          }}>
+            <span>BCT Fibernet</span>
+            <span>/</span>
+            <span>Inbound System</span>
+            <span>/</span>
+            <span style={{ color: 'var(--text-secondary)' }}>Customer Support</span>
+          </div>
+          <h1 style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: 'clamp(26px, 4vw, 34px)',
+            fontWeight: 800,
+            letterSpacing: '-0.03em',
+            color: 'var(--text-primary)',
+            lineHeight: 1.2,
+          }}>
+            Customer Support
+          </h1>
         </div>
         <SupportIVRCard activeOption={activeOption} onSelectOption={handleSelectOption} />
       </div>

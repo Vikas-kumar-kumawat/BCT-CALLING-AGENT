@@ -2,8 +2,8 @@ import { Phone, X } from 'lucide-react'
 
 export default function RechargeCard({ onCall, onCancelCall, loading, status }) {
   const rows = [
-    { label: 'Customer',       value: 'Vikas',             valueStyle: { color: 'var(--text-primary)', fontWeight: 700 } },
-    { label: 'Phone',          value: '+91 9057262630',     valueStyle: { color: 'var(--accent)', fontFamily: 'monospace', fontWeight: 700 } },
+    { label: 'Customer',       value: 'Demo Customer',             valueStyle: { color: 'var(--text-primary)', fontWeight: 700 } },
+    { label: 'Phone',          value: '+91 99999 99999',     valueStyle: { color: 'var(--accent)', fontFamily: 'monospace', fontWeight: 700 } },
     { label: 'Current Plan',   value: '100 Mbps Unlimited', valueStyle: { color: 'var(--text-secondary)' } },
     { label: 'Renewal Amount', value: '₹799',              valueStyle: { color: 'var(--text-primary)', fontWeight: 800, fontSize: '14px' } },
   ]
@@ -11,8 +11,8 @@ export default function RechargeCard({ onCall, onCancelCall, loading, status }) 
     <div className="cg-card overflow-hidden h-fit">
       <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
         <div>
-          <p className="forbes-label-red mb-0.5">Account Expiry</p>
-          <p style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>Expiring Account</p>
+          <p className="meta-label mb-0.5" style={{ color: 'var(--accent-light)' }}>Account Expiry</p>
+          <p style={{ fontFamily: 'Inter, sans-serif', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>Expiring Account</p>
         </div>
         <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
           style={{ color: '#f5a623', border: '1px solid rgba(245,166,35,0.2)', background: 'rgba(245,166,35,0.08)' }}>

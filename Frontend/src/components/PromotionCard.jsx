@@ -2,8 +2,8 @@ import { Phone, X, Sparkles } from 'lucide-react'
 
 export default function PromotionCard({ onCall, onCancelCall, loading, status }) {
   const rows = [
-    { label: 'Customer',    value: 'Vikas',                   valueStyle: { color: 'var(--text-primary)', fontWeight: 700 } },
-    { label: 'Phone',       value: '+91 9057262630',           valueStyle: { color: 'var(--accent)', fontFamily: 'monospace', fontWeight: 700 } },
+    { label: 'Customer',    value: 'Demo Customer',                   valueStyle: { color: 'var(--text-primary)', fontWeight: 700 } },
+    { label: 'Phone',       value: '+91 99999 99999',           valueStyle: { color: 'var(--accent)', fontFamily: 'monospace', fontWeight: 700 } },
     { label: 'Promo Plan',  value: '300 Mbps Ultra Fiber',    valueStyle: { color: 'var(--text-secondary)' } },
     { label: 'Free Perks',  value: '14 OTT Apps Included',    valueStyle: { color: '#4ade80', fontWeight: 600 } },
     { label: 'Offer Price', value: '₹999 / month',            valueStyle: { color: 'var(--text-primary)', fontWeight: 800, fontSize: '14px' } },
@@ -12,8 +12,8 @@ export default function PromotionCard({ onCall, onCancelCall, loading, status })
     <div className="cg-card overflow-hidden h-fit">
       <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
         <div>
-          <p className="forbes-label-red mb-0.5">Campaign</p>
-          <p style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>Promotion Target</p>
+          <p className="meta-label mb-0.5" style={{ color: 'var(--accent-light)' }}>Campaign</p>
+          <p style={{ fontFamily: 'Inter, sans-serif', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>Promotion Target</p>
         </div>
         <span className="flex items-center gap-1.5 text-purple-400 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
           style={{ border: '1px solid rgba(168,85,247,0.2)', background: 'rgba(168,85,247,0.08)' }}>

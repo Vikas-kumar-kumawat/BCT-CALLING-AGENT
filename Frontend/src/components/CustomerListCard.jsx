@@ -51,8 +51,8 @@ export default function CustomerListCard({ onCall, onCancelCall, onSelectCustome
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="min-w-0 mr-3">
-          <p className="forbes-label-red mb-0.5">CUSTOMER DIRECTORY</p>
-          <p className="font-semibold text-sm truncate" style={{ fontFamily: "'Source Serif 4', serif", color: 'var(--text-primary)' }}>
+          <p className="meta-label mb-0.5" style={{ color: 'var(--accent-light)' }}>Customer Directory</p>
+          <p className="font-semibold text-sm truncate" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--text-primary)' }}>
             Contact List <span className="font-mono font-normal text-xs ml-1" style={{ color: 'var(--text-muted)' }}>{customers.length}</span>
           </p>
         </div>
@@ -77,8 +77,8 @@ export default function CustomerListCard({ onCall, onCancelCall, onSelectCustome
 
       {/* Column labels — simplified on mobile */}
       <div className="grid px-4 py-2" style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--row-hover)', gridTemplateColumns: '1fr auto' }}>
-        <span className="forbes-label">Name / Phone</span>
-        <span className="forbes-label">Actions</span>
+        <span className="meta-label">Name / Phone</span>
+        <span className="meta-label text-right">Actions</span>
       </div>
 
       {/* Rows */}
