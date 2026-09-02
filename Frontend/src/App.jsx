@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react'
 import Home from './pages/Home'
 import FeedbackCalls from './pages/FeedbackCalls'
-import RechargeReminder from './pages/RechargeReminder'
-import PlanPromotion from './pages/PlanPromotion'
 import SalesAgent from './pages/SalesAgent'
-import InboundCalls from './pages/InboundCalls'
 import Settings from './pages/Settings'
 import {
-  LayoutDashboard, PhoneCall, Briefcase, CreditCard,
-  Sparkles, Headphones, Moon, Sun, Menu, X, Radio, ChevronRight
+  LayoutDashboard, PhoneCall, Briefcase,
+  Moon, Sun, Menu, X, Radio, ChevronRight
 } from 'lucide-react'
 
 const PAGE_LABELS = {
@@ -55,13 +52,9 @@ function NavItem({ label, icon: Icon, active, onClick, collapsed }) {
         gap: '10px',
         padding: collapsed ? '10px 0' : '9px 20px',
         justifyContent: collapsed ? 'center' : 'flex-start',
-        background: active
-          ? 'rgba(0, 100, 224, 0.10)'
-          : hovered
-          ? 'rgba(255, 255, 255, 0.04)'
-          : 'transparent',
+        background: active ? 'var(--nav-active-bg)' : hovered ? 'var(--nav-hover-bg)' : 'transparent',
         border: 'none',
-        borderLeft: active ? '2px solid var(--accent)' : '2px solid transparent',
+        borderLeft: active ? '2px solid var(--nav-active-border)' : '2px solid transparent',
         cursor: 'pointer',
         transition: 'all 0.15s ease',
         fontFamily: 'Inter, sans-serif',
@@ -76,7 +69,7 @@ function NavItem({ label, icon: Icon, active, onClick, collapsed }) {
       <Icon
         size={16}
         style={{
-          color: active ? 'var(--accent-light)' : 'var(--text-muted)',
+          color: active ? 'var(--accent-light)' : hovered ? 'var(--text-primary)' : 'var(--text-muted)',
           flexShrink: 0,
           transition: 'color 0.15s ease',
         }}
@@ -177,6 +170,8 @@ export default function App() {
       <nav style={{ flex: 1, overflowY: 'auto', paddingTop: '12px', paddingBottom: '12px' }} className="custom-scrollbar">
         <NavItem label="Dashboard" icon={LayoutDashboard} active={tab === 'home'} collapsed={collapsed} onClick={() => navigate('home')} />
         <NavItem label="Feedback Calls" icon={PhoneCall} active={tab === 'feedback'} collapsed={collapsed} onClick={() => navigate('feedback')} />
+        <NavItem label="Sales Agent" icon={Briefcase} active={tab === 'sales'} collapsed={collapsed} onClick={() => navigate('sales')} />
+        <NavItem label="Settings" icon={Radio} active={tab === 'settings'} collapsed={collapsed} onClick={() => navigate('settings')} />
       </nav>
 
       {/* ── Footer ───────────────────────────────────────────────────── */}
@@ -207,7 +202,7 @@ export default function App() {
             fontSize: '12px',
             transition: 'background 0.15s ease',
           }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--nav-hover-bg)'}
           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
           {theme === 'dark'
@@ -253,6 +248,7 @@ export default function App() {
           flexShrink: 0,
           position: 'relative',
           zIndex: 20,
+          backdropFilter: 'blur(18px)',
         }}
       >
         <SidebarContent />
@@ -262,7 +258,7 @@ export default function App() {
       {isMobileDrawerOpen && (
         <div className="md:hidden" style={{ position: 'fixed', inset: 0, zIndex: 40, display: 'flex' }}>
           <div
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
+            style={{ position: 'absolute', inset: 0, background: 'var(--backdrop-overlay)', backdropFilter: 'blur(8px)' }}
             onClick={() => setIsMobileDrawerOpen(false)}
           />
           <div style={{
@@ -270,6 +266,7 @@ export default function App() {
             background: 'var(--sidebar-bg)',
             borderRight: '1px solid var(--sidebar-border)',
             display: 'flex', flexDirection: 'column', height: '100%',
+            backdropFilter: 'blur(18px)',
           }}>
             <SidebarContent showClose />
           </div>
@@ -283,15 +280,13 @@ export default function App() {
 
         {/* Page content */}
         <main style={{ flex: 1, overflowY: 'auto', position: 'relative' }} className="custom-scrollbar">
+          <div className="bg-dot-grid" style={{ position: 'absolute', inset: 0, opacity: 0.45, pointerEvents: 'none' }} />
           <div className="framer-ambient-glow" />
           <div style={{ padding: '32px', minHeight: '100%', position: 'relative', zIndex: 1 }}>
-            {tab === 'home'      && <Home onNavigate={setTab} />}
-            {tab === 'feedback'  && <FeedbackCalls />}
-            {tab === 'sales'     && <SalesAgent />}
-            {tab === 'recharge'  && <RechargeReminder />}
-            {tab === 'promotion' && <PlanPromotion />}
-            {tab === 'inbound'   && <InboundCalls />}
-            {tab === 'settings'  && <Settings />}
+            {tab === 'home'     && <Home onNavigate={setTab} />}
+            {tab === 'feedback' && <FeedbackCalls />}
+            {tab === 'sales'    && <SalesAgent />}
+            {tab === 'settings' && <Settings />}
           </div>
         </main>
       </div>

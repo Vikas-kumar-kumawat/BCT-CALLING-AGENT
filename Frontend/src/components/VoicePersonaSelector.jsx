@@ -34,32 +34,44 @@ export default function VoicePersonaSelector() {
   }
 
   return (
-    <div className="bg-[#111215] border border-[#22242b] rounded-2xl p-5 flex flex-col gap-4 shadow-xl">
-      <div className="flex items-center gap-3">
-        <div className="bg-[#17181c] border border-[#262832] p-2.5 rounded-xl text-zinc-200">🎙️</div>
-        <div className="flex flex-col">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-zinc-300">Voice Persona Models</span>
-          <span className="text-[10px] font-mono bg-[#17181c] border border-[#262832] text-zinc-400 px-2 py-0.5 rounded-md font-bold">Swarvam</span>
+    <div className="cg-card p-5 flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <p className="meta-label" style={{ margin: 0, color: 'var(--text-muted)' }}>Voice</p>
+          <p style={{ margin: '6px 0 0', fontFamily: 'Inter, sans-serif', fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
+            Select a simple voice profile
+          </p>
         </div>
+        <button
+          onClick={() => handlePlaySample(selected)}
+          className="btn-ghost"
+          disabled={playing}
+          style={{ minWidth: '110px' }}
+        >
+          {playing ? 'Playing...' : 'Play sample'}
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-2">
-        {VOICES.map(v => (
-          <div key={v.id} className="flex items-center justify-between p-3 bg-[#0b0b0c] rounded-lg border border-[#1f2024]">
-            <div>
-              <div className="font-semibold text-sm">{v.name}</div>
-              <div className="text-xs text-zinc-400">{v.id}</div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => handlePlaySample(v.id)}
-                className="bg-white hover:bg-zinc-200 text-black text-xs px-3 py-1.5 rounded-md">
-                {playing ? 'Playing...' : 'Demo'}
-              </button>
-              <input type="radio" name="voice" checked={selected === v.id}
-                onChange={() => setSelected(v.id)} />
-            </div>
-          </div>
-        ))}
+      <div style={{ display: 'grid', gap: '10px' }}>
+        <label style={{ display: 'grid', gap: '6px' }}>
+          <span style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+            Voice profile
+          </span>
+          <select
+            value={selected}
+            onChange={e => setSelected(e.target.value)}
+            className="cg-input"
+            style={{ appearance: 'none' }}
+          >
+            {VOICES.map(v => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
+        </label>
+
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          Current profile: {VOICES.find(v => v.id === selected)?.name}
+        </div>
       </div>
     </div>
   )

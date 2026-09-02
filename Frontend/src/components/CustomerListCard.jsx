@@ -51,7 +51,7 @@ export default function CustomerListCard({ onCall, onCancelCall, onSelectCustome
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="min-w-0 mr-3">
-          <p className="meta-label mb-0.5" style={{ color: 'var(--accent-light)' }}>Customer Directory</p>
+          <p className="meta-label mb-0.5" style={{ color: 'var(--text-muted)' }}>Customer Directory</p>
           <p className="font-semibold text-sm truncate" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--text-primary)' }}>
             Contact List <span className="font-mono font-normal text-xs ml-1" style={{ color: 'var(--text-muted)' }}>{customers.length}</span>
           </p>
@@ -103,15 +103,15 @@ export default function CustomerListCard({ onCall, onCancelCall, onSelectCustome
               className="flex items-center px-4 py-3 cursor-pointer transition-all duration-100 gap-3"
               style={{
                 borderBottom: '1px solid var(--border-subtle)',
-                borderLeft: `3px solid ${isActive ? '#e00000' : isSelected ? 'var(--text-muted)' : 'transparent'}`,
-                background: isActive ? 'rgba(224,0,0,0.04)' : isSelected ? 'var(--row-hover)' : 'transparent',
+                borderLeft: `3px solid ${isActive ? 'var(--live-accent)' : isSelected ? 'var(--text-muted)' : 'transparent'}`,
+                background: isActive ? 'var(--live-accent-bg)' : isSelected ? 'var(--row-hover)' : 'transparent',
               }}
             >
               {/* Avatar + info */}
               <div className="flex-1 flex items-center gap-3 min-w-0">
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white uppercase"
-                  style={{ background: isActive ? '#e00000' : 'var(--text-muted)' }}
+                  style={{ background: isActive ? 'var(--live-accent)' : 'var(--text-muted)' }}
                 >
                   {c.name?.[0] || '?'}
                 </div>
@@ -128,7 +128,7 @@ export default function CustomerListCard({ onCall, onCancelCall, onSelectCustome
                   disabled={activeCallId && activeCallId !== c.id}
                   className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-md transition-all cursor-pointer disabled:opacity-25"
                   style={isActive
-                    ? { color: '#e00000', border: '1px solid rgba(224,0,0,0.3)', background: 'rgba(224,0,0,0.05)' }
+                    ? { color: 'var(--live-accent)', border: '1px solid var(--live-accent-border)', background: 'var(--live-accent-bg)' }
                     : { color: 'var(--text-muted)', border: '1px solid var(--border-subtle)', background: 'transparent' }
                   }
                 >
@@ -144,7 +144,7 @@ export default function CustomerListCard({ onCall, onCancelCall, onSelectCustome
                     Stop
                   </button>
                 )}
-                <button onClick={(e) => handleDelete(e, c.id)} className="p-1.5 rounded-md cursor-pointer hover:text-[#e00000] transition-colors" style={{ color: 'var(--text-muted)' }}>
+                <button onClick={(e) => handleDelete(e, c.id)} className="p-1.5 rounded-md cursor-pointer transition-colors" style={{ color: 'var(--text-muted)' }}>
                   <Trash2 size={13} />
                 </button>
               </div>

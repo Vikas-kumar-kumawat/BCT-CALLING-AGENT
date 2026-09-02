@@ -2,32 +2,23 @@ import VoicePersonaSelector from '../components/VoicePersonaSelector'
 
 export default function Settings() {
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          marginBottom: '12px',
-          fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'Inter, sans-serif',
-        }}>
-          <span>BCT Fibernet</span>
-          <span>/</span>
-          <span>System</span>
-          <span>/</span>
-          <span style={{ color: 'var(--text-secondary)' }}>Voice Settings</span>
-        </div>
+    <div className="max-w-3xl mx-auto space-y-4">
+      <section className="cg-card px-5 py-4">
+        <p className="meta-label" style={{ margin: 0, color: 'var(--text-muted)' }}>Settings</p>
         <h1 style={{
+          margin: '6px 0 0',
           fontFamily: 'Inter, sans-serif',
-          fontSize: '24px',
-          fontWeight: 800,
-          letterSpacing: '-0.02em',
+          fontSize: '22px',
+          fontWeight: 700,
+          letterSpacing: '-0.03em',
           color: 'var(--text-primary)',
           lineHeight: 1.2,
         }}>
-          Voice Settings
+          Voice profile
         </h1>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div>
         <VoicePersonaSelector />
       </div>
     </div>

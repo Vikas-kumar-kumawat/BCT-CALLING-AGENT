@@ -30,20 +30,20 @@ export default function ConversationStream({ logs = [], displayedTextMap = {}, s
         <div className="flex items-center gap-2">
           {isLive ? (
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e00000] opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#e00000]" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full" style={{ background: 'var(--live-accent)', opacity: 0.45 }} />
+              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: 'var(--live-accent)' }} />
             </span>
           ) : (
             <span className="h-2 w-2 rounded-full" style={{ background: 'var(--border-subtle)' }} />
           )}
-          <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: isLive ? '#e00000' : 'var(--text-muted)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: isLive ? 'var(--live-accent)' : 'var(--text-muted)' }}>
             {isLive ? 'Live Session' : isPast ? 'Past Record' : 'Conversation'}
           </p>
         </div>
         <span
           className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
           style={isLive
-            ? { background: '#e00000', color: '#fff' }
+            ? { background: 'var(--live-accent)', color: '#fff' }
             : { color: 'var(--text-muted)', border: '1px solid var(--border-subtle)', background: 'transparent' }
           }
         >
@@ -81,7 +81,7 @@ export default function ConversationStream({ logs = [], displayedTextMap = {}, s
           return (
             <div key={logId} className={`flex flex-col ${isAgent ? 'items-start' : 'items-end'}`}>
               <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: isAgent ? '#e00000' : 'var(--text-muted)' }}>
+                <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: isAgent ? 'var(--live-accent)' : 'var(--text-muted)' }}>
                   {log.speaker || (isAgent ? 'AGENT' : 'CUSTOMER')}
                 </span>
                 <span style={{ color: 'var(--border-subtle)' }}>·</span>
@@ -92,12 +92,12 @@ export default function ConversationStream({ logs = [], displayedTextMap = {}, s
                 style={{
                   maxWidth: 'min(88%, 320px)',
                   ...(isAgent
-                    ? { background: 'rgba(224,0,0,0.04)', border: '1px solid rgba(224,0,0,0.12)', borderLeft: '2px solid #e00000', color: 'var(--text-primary)' }
+                    ? { background: 'var(--live-accent-bg)', border: '1px solid var(--live-accent-border)', borderLeft: `2px solid var(--live-accent)`, color: 'var(--text-primary)' }
                     : { background: 'var(--row-hover)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' })
                 }}
               >
                 {displayedText}
-                {isTyping && <span className="inline-block w-1 h-3 ml-1 bg-[#e00000] rounded-sm animate-pulse" />}
+                {isTyping && <span className="inline-block w-1 h-3 ml-1 rounded-sm animate-pulse" style={{ background: 'var(--live-accent)' }} />}
               </div>
             </div>
           )

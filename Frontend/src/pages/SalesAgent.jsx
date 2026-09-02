@@ -35,33 +35,24 @@ export default function SalesAgent() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          marginBottom: '12px',
-          fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'Inter, sans-serif',
-        }}>
-          <span>BCT Fibernet</span>
-          <span>/</span>
-          <span>Outbound Campaigns</span>
-          <span>/</span>
-          <span style={{ color: 'var(--text-secondary)' }}>Sales Agent</span>
-        </div>
+    <div className="max-w-4xl mx-auto space-y-4">
+      <section className="cg-card px-5 py-4">
+        <p className="meta-label" style={{ margin: 0, color: 'var(--text-muted)' }}>Sales Agent</p>
         <h1 style={{
+          margin: '6px 0 0',
           fontFamily: 'Inter, sans-serif',
-          fontSize: 'clamp(26px, 4vw, 34px)',
-          fontWeight: 800,
+          fontSize: '22px',
+          fontWeight: 700,
           letterSpacing: '-0.03em',
           color: 'var(--text-primary)',
           lineHeight: 1.2,
         }}>
-          Sales Agent
+          Quick outbound calling
         </h1>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <CustomerCard 
+      <div className="space-y-4">
+        <CustomerCard
           onCall={handleCall} 
           onCancelCall={handleCancelCall} 
           loading={loading} 

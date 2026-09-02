@@ -1,84 +1,100 @@
 @import "tailwindcss";
 
 /* =====================================================
-   BCT AI — META DEVELOPER DESIGN SYSTEM
-   Extracted from developer.meta.com
-   Font: Inter (Optimistic Display alternative)
-   Dark teal palette: #0A1317 → #152127 → #1C2B33
-   Accent: #0064E0 (Meta CTA Blue)
-   ===================================================== */
+  BCT AI — Polished dual-theme design system
+  Shared tokens keep light and dark mode visually aligned
+  while still giving each theme its own atmosphere.
+  ===================================================== */
 
-/* ── DARK MODE (Meta AI Developer Portal) ── */
+/* ── DARK MODE (Vanta Supply Deep Dark) ── */
 :root,
 .dark {
-  --bg-app:               #0A1317;
-  --bg-secondary:         #152127;
-  --bg-surface-2:         #1C2B33;
-  --bg-surface-3:         #25363F;
-  --bg-toaster:           #283943;
-  --sidebar-bg:           #0A1317;
-  --sidebar-border:       rgba(255, 255, 255, 0.06);
-  --cg-card-bg:           #1C2B33;
-  --cg-card-border:       rgba(255, 255, 255, 0.06);
-  --cg-card-hover-border: rgba(0, 100, 224, 0.45);
-  --cg-card-shadow:       0 1px 2px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04);
-  --cg-card-hover-shadow: 0 12px 28px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.2);
-  --border-subtle:        rgba(255, 255, 255, 0.06);
-  --divider:              #3E4042;
-  --text-primary:         #E4E6EB;
-  --text-secondary:       #B0B3B8;
-  --text-muted:           #5D6C7B;
-  --input-bg:             #152127;
-  --input-border:         #344854;
-  --row-hover:            rgba(255, 255, 255, 0.03);
-  --accent:               #0064E0;
-  --accent-hover:         #0143B5;
-  --accent-pressed:       #004BB9;
-  --accent-dim:           rgba(0, 100, 224, 0.12);
-  --accent-border:        rgba(0, 100, 224, 0.35);
-  --accent-light:         #47A5FA;
+  --bg-app:               #0a0f16;
+  --bg-secondary:         #0f1722;
+  --bg-surface-2:         #131c29;
+  --bg-surface-3:         #182131;
+  --bg-toaster:           #111826;
+  --sidebar-bg:           rgba(10, 15, 22, 0.84);
+  --sidebar-border:       rgba(148, 163, 184, 0.14);
+  --cg-card-bg:           rgba(15, 23, 34, 0.82);
+  --cg-card-border:       rgba(148, 163, 184, 0.14);
+  --cg-card-hover-border: rgba(148, 163, 184, 0.24);
+  --cg-card-shadow:       0 18px 40px rgba(2, 6, 23, 0.34), inset 0 1px 0 rgba(255,255,255,0.03);
+  --cg-card-hover-shadow: 0 24px 64px rgba(2, 6, 23, 0.44), inset 0 1px 0 rgba(255,255,255,0.05);
+  --border-subtle:        rgba(148, 163, 184, 0.14);
+  --divider:              rgba(148, 163, 184, 0.18);
+  --text-primary:         #f8fafc;
+  --text-secondary:       #c0cad8;
+  --text-muted:           #8390a3;
+  --input-bg:             rgba(15, 23, 34, 0.9);
+  --input-border:         rgba(148, 163, 184, 0.16);
+  --row-hover:            rgba(148, 163, 184, 0.08);
+  --nav-hover-bg:         rgba(148, 163, 184, 0.08);
+  --nav-active-bg:        rgba(148, 163, 184, 0.12);
+  --nav-active-border:    #94a3b8;
+  --accent:               #94a3b8;
+  --accent-hover:         #cbd5e1;
+  --accent-pressed:       #e2e8f0;
+  --accent-dim:           rgba(148, 163, 184, 0.12);
+  --accent-border:        rgba(148, 163, 184, 0.24);
+  --accent-light:         #e2e8f0;
   --positive:             #31A24C;
   --positive-bg:          rgba(49, 162, 76, 0.12);
   --warning:              #F7B928;
   --warning-bg:           rgba(247, 185, 40, 0.12);
-  --negative:             #e41e3f;
+  --negative:             #E41E3F;
   --negative-bg:          rgba(228, 30, 63, 0.12);
+  --live-accent:          #ef4444;
+  --live-accent-bg:       rgba(239, 68, 68, 0.08);
+  --live-accent-border:   rgba(239, 68, 68, 0.18);
+  --app-bg-image:         radial-gradient(circle at 18% 18%, rgba(148, 163, 184, 0.09), transparent 28%), radial-gradient(circle at 82% 10%, rgba(71, 85, 105, 0.08), transparent 24%), linear-gradient(180deg, #0a0f16 0%, #0c121a 48%, #070c12 100%);
+  --page-grid-opacity:    0.14;
+  --backdrop-overlay:     rgba(2, 6, 23, 0.64);
 }
 
-/* ── LIGHT MODE ── */
+/* ── LIGHT MODE (Premium Minimal) ── */
 :root:not(.dark) {
-  --bg-app:               #F1F4F7;
-  --bg-secondary:         #FFFFFF;
-  --bg-surface-2:         #E6EBEF;
-  --bg-surface-3:         #F1F4F7;
-  --bg-toaster:           #FFFFFF;
-  --sidebar-bg:           #FFFFFF;
-  --sidebar-border:       #DEE3E9;
-  --cg-card-bg:           #FFFFFF;
-  --cg-card-border:       #DEE3E9;
-  --cg-card-hover-border: rgba(0, 100, 224, 0.35);
-  --cg-card-shadow:       0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --cg-card-hover-shadow: 0 12px 28px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
-  --border-subtle:        #DEE3E9;
-  --divider:              #CBD2D9;
-  --text-primary:         #1C2B33;
-  --text-secondary:       #465A69;
-  --text-muted:           #A4B0BC;
-  --input-bg:             #FFFFFF;
-  --input-border:         #CBD2D9;
-  --row-hover:            #F1F4F7;
-  --accent:               #0064E0;
-  --accent-hover:         #0143B5;
-  --accent-pressed:       #004BB9;
-  --accent-dim:           rgba(0, 100, 224, 0.08);
-  --accent-border:        rgba(0, 100, 224, 0.2);
-  --accent-light:         #47A5FA;
+  --bg-app:               #f2f5f8;
+  --bg-secondary:         #ffffff;
+  --bg-surface-2:         #f6f8fb;
+  --bg-surface-3:         #e8eef4;
+  --bg-toaster:           #ffffff;
+  --sidebar-bg:           rgba(255, 255, 255, 0.88);
+  --sidebar-border:       rgba(15, 23, 42, 0.07);
+  --cg-card-bg:           rgba(255, 255, 255, 0.96);
+  --cg-card-border:       rgba(15, 23, 42, 0.08);
+  --cg-card-hover-border: rgba(100, 116, 139, 0.16);
+  --cg-card-shadow:       0 10px 28px rgba(15, 23, 42, 0.045), 0 2px 4px rgba(15, 23, 42, 0.03);
+  --cg-card-hover-shadow: 0 18px 36px rgba(15, 23, 42, 0.06), 0 8px 16px rgba(15, 23, 42, 0.05);
+  --border-subtle:        rgba(15, 23, 42, 0.08);
+  --divider:              rgba(15, 23, 42, 0.1);
+  --text-primary:         #0f172a;
+  --text-secondary:       #334155;
+  --text-muted:           #64748b;
+  --input-bg:             rgba(255, 255, 255, 0.98);
+  --input-border:         rgba(148, 163, 184, 0.18);
+  --row-hover:            rgba(100, 116, 139, 0.045);
+  --nav-hover-bg:         rgba(100, 116, 139, 0.055);
+  --nav-active-bg:        rgba(100, 116, 139, 0.09);
+  --nav-active-border:    #64748b;
+  --accent:               #475569;
+  --accent-hover:         #334155;
+  --accent-pressed:       #1e293b;
+  --accent-dim:           rgba(100, 116, 139, 0.08);
+  --accent-border:        rgba(100, 116, 139, 0.18);
+  --accent-light:         #334155;
   --positive:             #007D1E;
   --positive-bg:          rgba(0, 125, 30, 0.08);
   --warning:              #C67F00;
   --warning-bg:           rgba(198, 127, 0, 0.1);
   --negative:             #C80A28;
   --negative-bg:          rgba(200, 10, 40, 0.08);
+  --live-accent:          #b91c1c;
+  --live-accent-bg:       rgba(185, 28, 28, 0.06);
+  --live-accent-border:   rgba(185, 28, 28, 0.16);
+  --app-bg-image:         radial-gradient(circle at 14% 18%, rgba(148, 163, 184, 0.06), transparent 26%), radial-gradient(circle at 84% 8%, rgba(100, 116, 139, 0.05), transparent 24%), linear-gradient(180deg, #f7f8fa 0%, #eef1f5 52%, #e7ebef 100%);
+  --page-grid-opacity:    0.08;
+  --backdrop-overlay:     rgba(15, 23, 42, 0.36);
 }
 
 @layer base {
@@ -87,11 +103,16 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background: var(--bg-app);
+    background-image: var(--app-bg-image);
+    background-attachment: fixed;
+    background-size: cover;
+    min-height: 100vh;
     color: var(--text-primary);
-    transition: background 0.25s ease, color 0.25s ease;
+    transition: background 0.25s ease, color 0.25s ease, background-image 0.25s ease;
     font-feature-settings: "cv11", "ss01";
+    letter-spacing: -0.015em; /* Tighter editorial tracking for Inter */
   }
-  ::selection { background: var(--accent); color: #fff; }
+  ::selection { background: var(--text-primary); color: var(--bg-app); }
   * { box-sizing: border-box; }
 }
 
@@ -101,7 +122,7 @@
 .cg-card {
   background: var(--cg-card-bg);
   border: 1px solid var(--cg-card-border);
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: var(--cg-card-shadow);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -109,7 +130,7 @@
 .cg-card-hover {
   background: var(--cg-card-bg);
   border: 1px solid var(--cg-card-border);
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: var(--cg-card-shadow);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.17,0.17,0,1);
 }
@@ -123,7 +144,7 @@
    BUTTONS — Meta style (6px / 10px / 12px radius)
    ===================================================== */
 .btn-primary {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
   color: #ffffff;
   font-family: 'Inter', sans-serif;
   font-size: 13px;
@@ -133,14 +154,14 @@
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.18);
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
   white-space: nowrap;
   line-height: 1.4;
 }
 .btn-primary:hover {
-  background: var(--accent-hover);
-  box-shadow: 0 4px 12px rgba(0, 100, 224, 0.4);
+  background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent-pressed) 100%);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.24);
   transform: translateY(-1px);
 }
 .btn-primary:active { background: var(--accent-pressed); transform: scale(0.98); }
@@ -234,12 +255,12 @@
    ===================================================== */
 .framer-ambient-glow {
   position: fixed;
-  top: -15%;
-  right: -10%;
-  width: 60vw;
-  height: 60vh;
-  background: radial-gradient(ellipse at 60% 20%, rgba(0, 100, 224, 0.07) 0%, rgba(71, 165, 250, 0.04) 40%, transparent 70%);
-  filter: blur(60px);
+  top: -12%;
+  right: -8%;
+  width: 58vw;
+  height: 58vh;
+  background: radial-gradient(ellipse at 60% 20%, rgba(148, 163, 184, 0.16) 0%, rgba(100, 116, 139, 0.06) 36%, transparent 72%);
+  filter: blur(80px);
   pointer-events: none;
   z-index: 0;
   opacity: 1;
@@ -250,7 +271,7 @@
    SUBTLE GRID — Meta uses a very faint noise/grid
    ===================================================== */
 .bg-dot-grid {
-  background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(148,163,184, var(--page-grid-opacity)) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
