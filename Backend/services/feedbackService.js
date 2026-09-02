@@ -4,8 +4,10 @@ const { GREETING, THANK_YOU, SWARVAM_VOICE_ID, SWARVAM_RATE } = require('../conf
 
 let logs = []
 
-const log = (sender, speaker, text) =>
+const log = (sender, speaker, text) => {
+  if (speaker === 'System') return // Ignore System logs to keep UI clean
   logs.push({ id: Date.now() + logs.length, sender, speaker, text, time: new Date().toLocaleTimeString() })
+}
 
 const getLogs = () => logs
 const resetLogs = () => { logs.length = 0 }

@@ -1,144 +1,118 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap');
 
 /* =====================================================
-   BCT AI — SHERYIANS DESIGN SYSTEM
-   Pure Black + Orange Accent (#e8602e)
-   Font: Manrope Variable
+   BCT AI — META DEVELOPER DESIGN SYSTEM
+   Extracted from developer.meta.com
+   Font: Inter (Optimistic Display alternative)
+   Dark teal palette: #0A1317 → #152127 → #1C2B33
+   Accent: #0064E0 (Meta CTA Blue)
    ===================================================== */
 
-@font-face {
-  font-family: 'Manrope';
-  src: url('https://fonts.gstatic.com/s/manrope/v15/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk6jFO_F87jxeN7B.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ── DARK (Sheryians Default) ── */
+/* ── DARK MODE (Meta AI Developer Portal) ── */
 :root,
 .dark {
-  --bg-app:          #000000;
-  --bg-secondary:    #0a0a0a;
-  --bg-dot:          rgba(232,96,46,0.06);
-  --sidebar-bg:      #050505;
-  --sidebar-border:  rgba(232,96,46,0.12);
-  --cg-card-bg:      #0d0d0d;
-  --cg-card-border:  rgba(255,255,255,0.06);
-  --cg-card-hover-border: rgba(232,96,46,0.35);
-  --cg-card-shadow:  0 0 0 1px rgba(255,255,255,0.04);
-  --cg-card-hover-shadow: 0 0 30px rgba(232,96,46,0.08), 0 0 0 1px rgba(232,96,46,0.2);
-  --border-subtle:   rgba(255,255,255,0.06);
-  --text-primary:    #ffffff;
-  --text-secondary:  #a0a0a0;
-  --text-muted:      #555555;
-  --input-bg:        #0d0d0d;
-  --input-border:    rgba(255,255,255,0.08);
-  --row-hover:       rgba(255,255,255,0.02);
-  --accent:          #e8602e;
-  --accent-dim:      rgba(232,96,46,0.12);
-  --accent-border:   rgba(232,96,46,0.25);
-  --framer-glow:     radial-gradient(ellipse at 70% 20%, rgba(232,96,46,0.15) 0%, rgba(232,96,46,0.05) 40%, transparent 70%);
+  --bg-app:               #0A1317;
+  --bg-secondary:         #152127;
+  --bg-surface-2:         #1C2B33;
+  --bg-surface-3:         #25363F;
+  --bg-toaster:           #283943;
+  --sidebar-bg:           #0A1317;
+  --sidebar-border:       rgba(255, 255, 255, 0.06);
+  --cg-card-bg:           #1C2B33;
+  --cg-card-border:       rgba(255, 255, 255, 0.06);
+  --cg-card-hover-border: rgba(0, 100, 224, 0.45);
+  --cg-card-shadow:       0 1px 2px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04);
+  --cg-card-hover-shadow: 0 12px 28px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.2);
+  --border-subtle:        rgba(255, 255, 255, 0.06);
+  --divider:              #3E4042;
+  --text-primary:         #E4E6EB;
+  --text-secondary:       #B0B3B8;
+  --text-muted:           #5D6C7B;
+  --input-bg:             #152127;
+  --input-border:         #344854;
+  --row-hover:            rgba(255, 255, 255, 0.03);
+  --accent:               #0064E0;
+  --accent-hover:         #0143B5;
+  --accent-pressed:       #004BB9;
+  --accent-dim:           rgba(0, 100, 224, 0.12);
+  --accent-border:        rgba(0, 100, 224, 0.35);
+  --accent-light:         #47A5FA;
+  --positive:             #31A24C;
+  --positive-bg:          rgba(49, 162, 76, 0.12);
+  --warning:              #F7B928;
+  --warning-bg:           rgba(247, 185, 40, 0.12);
+  --negative:             #e41e3f;
+  --negative-bg:          rgba(228, 30, 63, 0.12);
 }
 
 /* ── LIGHT MODE ── */
 :root:not(.dark) {
-  --bg-app:          #F8F6F3;
-  --bg-secondary:    #FFFFFF;
-  --bg-dot:          rgba(232,96,46,0.06);
-  --sidebar-bg:      #FFFFFF;
-  --sidebar-border:  #E5E0D8;
-  --cg-card-bg:      #FFFFFF;
-  --cg-card-border:  #E5E0D8;
-  --cg-card-hover-border: rgba(232,96,46,0.4);
-  --cg-card-shadow:  0 1px 3px rgba(0,0,0,0.06);
-  --cg-card-hover-shadow: 0 4px 20px rgba(232,96,46,0.1);
-  --border-subtle:   #E5E0D8;
-  --text-primary:    #111111;
-  --text-secondary:  #444444;
-  --text-muted:      #888888;
-  --input-bg:        #FFFFFF;
-  --input-border:    #CCCCCC;
-  --row-hover:       #F8F6F3;
-  --accent:          #e8602e;
-  --accent-dim:      rgba(232,96,46,0.08);
-  --accent-border:   rgba(232,96,46,0.2);
-  --framer-glow:     radial-gradient(ellipse at 80% 10%, rgba(232,96,46,0.1) 0%, rgba(232,96,46,0.03) 50%, transparent 80%);
+  --bg-app:               #F1F4F7;
+  --bg-secondary:         #FFFFFF;
+  --bg-surface-2:         #E6EBEF;
+  --bg-surface-3:         #F1F4F7;
+  --bg-toaster:           #FFFFFF;
+  --sidebar-bg:           #FFFFFF;
+  --sidebar-border:       #DEE3E9;
+  --cg-card-bg:           #FFFFFF;
+  --cg-card-border:       #DEE3E9;
+  --cg-card-hover-border: rgba(0, 100, 224, 0.35);
+  --cg-card-shadow:       0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --cg-card-hover-shadow: 0 12px 28px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+  --border-subtle:        #DEE3E9;
+  --divider:              #CBD2D9;
+  --text-primary:         #1C2B33;
+  --text-secondary:       #465A69;
+  --text-muted:           #A4B0BC;
+  --input-bg:             #FFFFFF;
+  --input-border:         #CBD2D9;
+  --row-hover:            #F1F4F7;
+  --accent:               #0064E0;
+  --accent-hover:         #0143B5;
+  --accent-pressed:       #004BB9;
+  --accent-dim:           rgba(0, 100, 224, 0.08);
+  --accent-border:        rgba(0, 100, 224, 0.2);
+  --accent-light:         #47A5FA;
+  --positive:             #007D1E;
+  --positive-bg:          rgba(0, 125, 30, 0.08);
+  --warning:              #C67F00;
+  --warning-bg:           rgba(198, 127, 0, 0.1);
+  --negative:             #C80A28;
+  --negative-bg:          rgba(200, 10, 40, 0.08);
 }
 
 @layer base {
   body {
-    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background: var(--bg-app);
     color: var(--text-primary);
-    transition: background 0.3s ease, color 0.3s ease;
+    transition: background 0.25s ease, color 0.25s ease;
+    font-feature-settings: "cv11", "ss01";
   }
   ::selection { background: var(--accent); color: #fff; }
+  * { box-sizing: border-box; }
 }
 
 /* =====================================================
-   AMBIENT GLOW
-   ===================================================== */
-.framer-ambient-glow {
-  position: fixed;
-  top: -10%;
-  right: -5%;
-  width: 70vw;
-  height: 70vh;
-  background: var(--framer-glow);
-  filter: blur(80px);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 1;
-  transition: background 0.4s ease;
-}
-
-/* =====================================================
-   DOT GRID
-   ===================================================== */
-.bg-dot-grid {
-  background-image: radial-gradient(var(--bg-dot) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-/* =====================================================
-   TYPOGRAPHY
-   ===================================================== */
-.forbes-label {
-  font-family: 'Manrope', sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.forbes-label-red {
-  font-family: 'Manrope', sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-/* =====================================================
-   CARD SYSTEM
+   CARD SYSTEM — Meta 8px radius, layered surfaces
    ===================================================== */
 .cg-card {
   background: var(--cg-card-bg);
   border: 1px solid var(--cg-card-border);
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: var(--cg-card-shadow);
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cg-card-hover {
   background: var(--cg-card-bg);
   border: 1px solid var(--cg-card-border);
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: var(--cg-card-shadow);
-  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.17,0.17,0,1);
 }
 .cg-card-hover:hover {
   border-color: var(--cg-card-hover-border);
@@ -147,88 +121,192 @@
 }
 
 /* =====================================================
-   BUTTONS
+   BUTTONS — Meta style (6px / 10px / 12px radius)
    ===================================================== */
 .btn-primary {
   background: var(--accent);
-  color: #fff;
-  font-family: 'Manrope', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 9px 18px;
-  border-radius: 10px;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 9px 20px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(232,96,46,0.35);
-  transition: all 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
   white-space: nowrap;
+  line-height: 1.4;
 }
-.btn-primary:hover { background: #d4521f; box-shadow: 0 6px 28px rgba(232,96,46,0.5); transform: translateY(-1px); }
-.btn-primary:active { transform: scale(0.97) translateY(0); }
-.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; transform: none; }
+.btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 12px rgba(0, 100, 224, 0.4);
+  transform: translateY(-1px);
+}
+.btn-primary:active { background: var(--accent-pressed); transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
 
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
   border: 1px solid var(--cg-card-border);
-  font-family: 'Manrope', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 9px 18px;
-  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 20px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.15s ease;
   white-space: nowrap;
+  line-height: 1.4;
 }
 .btn-ghost:hover {
   border-color: var(--accent-border);
-  color: var(--text-primary);
+  color: var(--accent-light);
   background: var(--accent-dim);
 }
 
+.btn-icon {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  padding: 8px;
+}
+.btn-icon:hover {
+  background: var(--row-hover);
+  border-color: var(--divider);
+  color: var(--text-secondary);
+}
+
 /* =====================================================
-   INPUTS
+   INPUTS — Meta 6px radius, clean borders
    ===================================================== */
 .cg-input {
   background: var(--input-bg);
   border: 1px solid var(--input-border);
   color: var(--text-primary);
-  border-radius: 10px;
-  font-size: 13px;
-  font-family: 'Manrope', sans-serif;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
   padding: 10px 14px;
   width: 100%;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  line-height: 1.4;
 }
 .cg-input::placeholder { color: var(--text-muted); }
 .cg-input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(232,96,46,0.12);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 /* =====================================================
-   BADGES
+   TYPOGRAPHY — Meta weight scale
    ===================================================== */
-.badge-open     { color: #ff6b6b; background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.2); border-radius: 8px; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.badge-progress { color: #f5a623; background: rgba(245,166,35,0.1);  border: 1px solid rgba(245,166,35,0.2);  border-radius: 8px; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.badge-resolved { color: #4ade80; background: rgba(74,222,128,0.1);  border: 1px solid rgba(74,222,128,0.2);  border-radius: 8px; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.badge-live     { color: #fff; background: var(--accent); border: 1px solid transparent; border-radius: 8px; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.meta-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Keep legacy class for compatibility */
+.forbes-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.forbes-label-red {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-light);
+}
 
 /* =====================================================
-   ACCENT PULSE ANIMATION
+   BADGES — Meta rounded chip style
    ===================================================== */
+.badge-open     { color: #fb724b; background: rgba(251,114,75,0.1);  border: 1px solid rgba(251,114,75,0.2);  border-radius: 6px; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.badge-progress { color: #F7B928; background: rgba(247,185,40,0.1); border: 1px solid rgba(247,185,40,0.2); border-radius: 6px; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.badge-resolved { color: #31A24C; background: rgba(49,162,76,0.1);  border: 1px solid rgba(49,162,76,0.2);  border-radius: 6px; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.badge-live     { color: #fff;    background: var(--accent);         border: 1px solid transparent;          border-radius: 6px; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.badge-info     { color: var(--accent-light); background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: 6px; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* =====================================================
+   META SUBTLE GLOW — teal-blue instead of orange
+   ===================================================== */
+.framer-ambient-glow {
+  position: fixed;
+  top: -15%;
+  right: -10%;
+  width: 60vw;
+  height: 60vh;
+  background: radial-gradient(ellipse at 60% 20%, rgba(0, 100, 224, 0.07) 0%, rgba(71, 165, 250, 0.04) 40%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  transition: background 0.4s ease;
+}
+
+/* =====================================================
+   SUBTLE GRID — Meta uses a very faint noise/grid
+   ===================================================== */
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* =====================================================
+   DIVIDER LINE
+   ===================================================== */
+.meta-divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 0;
+}
+
+/* =====================================================
+   ANIMATIONS — Meta easing curves
+   ===================================================== */
+@keyframes meta-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.meta-fade-in { animation: meta-fade-in 0.28s cubic-bezier(0.14, 1, 0.34, 1) both; }
+
 @keyframes accent-pulse {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.08); }
 }
-.accent-pulse { animation: accent-pulse 2s ease-in-out infinite; }
+.accent-pulse { animation: accent-pulse 2.5s ease-in-out infinite; }
 
 /* =====================================================
-   SCROLLBAR
+   SCROLLBAR — Meta thin style
    ===================================================== */
-.custom-scrollbar::-webkit-scrollbar { width: 3px; height: 3px; }
+.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--accent-border); border-radius: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--divider); border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* =====================================================
+   SURFACE LAYERS — for nested cards (Meta layering)
+   ===================================================== */
+.surface-1 { background: var(--bg-secondary); }
+.surface-2 { background: var(--bg-surface-2); }
+.surface-3 { background: var(--bg-surface-3); }

@@ -137,9 +137,9 @@ async function transcribeAudio(audioInput, isAlaw = false) {
 }
 
 // Capture RTP in streaming mode: call `onChunk(buffer)` for each detected speech chunk
-function captureRtpStream(socket, onChunk, totalMaxMs = 8000) {
-  const SILENCE_THRESH = 15;
-  const SILENCE_TIMEOUT = 300; // Ultra-fast 300ms silence cut-off for instantaneous response
+function captureRtpStream(socket, onChunk, totalMaxMs = 12000) {
+  const SILENCE_THRESH = 10; // Lower threshold to detect softer speech
+  const SILENCE_TIMEOUT = 1200; // 1200ms silence cut-off so customer can speak comfortably without interruption
   let packets = [];
   let hasSpoken = false;
   let silenceStart = 0;
@@ -166,7 +166,7 @@ function captureRtpStream(socket, onChunk, totalMaxMs = 8000) {
     for (let i = 0; i < payload.length; i++) energy += (~payload[i]) & 0x7F;
     energy /= payload.length;
 
-    if (energy > SILENCE_THRESH) {
+      if (energy > SILENCE_THRESH) {
       hasSpoken = true;
       silenceStart = 0;
     } else if (hasSpoken) {
@@ -193,8 +193,8 @@ function captureRtpAudio(socket, maxDurationMs = 5000) {
     let hasSpoken = false;
     let timeoutId = null;
     let isAlaw = null;
-    const SILENCE_THRESH = 15;
-    const SILENCE_TIMEOUT = 600; // Cut dead-air detection to 600ms
+    const SILENCE_THRESH = 10;
+    const SILENCE_TIMEOUT = 1200; // Increase dead-air detection to 1200ms
 
     const resolveAndClean = () => {
       socket?.removeListener('message', onMsg);

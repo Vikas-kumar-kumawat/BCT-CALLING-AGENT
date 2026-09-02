@@ -1,12 +1,25 @@
 import { useState, useEffect } from 'react'
-import { PhoneCall, CreditCard, Sparkles, Headphones, ArrowUpRight, Phone, UserCircle2, Search } from 'lucide-react'
+import { PhoneCall, CreditCard, Sparkles, Headphones, ArrowUpRight, Phone, UserCircle2, Search, ArrowRight } from 'lucide-react'
 import { getApiUrl } from '../api'
 
+// ── Meta AI product card color themes ────────────────────────────────────────
 const modules = [
-  { id: 'feedback',  title: 'Feedback Calls',    icon: PhoneCall },
-  { id: 'recharge',  title: 'Recharge Reminder', icon: CreditCard },
-  { id: 'promotion', title: 'Plan Promotion',     icon: Sparkles },
-  { id: 'inbound',   title: 'Customer Support',  icon: Headphones },
+  {
+    id: 'feedback', title: 'Feedback Calls', subtitle: 'Automated AI-powered voice feedback collection from customers.',
+    icon: PhoneCall, color: '#0064E0', colorBg: 'rgba(0,100,224,0.1)', tag: 'Outbound',
+  },
+  {
+    id: 'recharge', title: 'Recharge Reminder', subtitle: 'Proactively remind customers before plan expiry with smart calls.',
+    icon: CreditCard, color: '#31A24C', colorBg: 'rgba(49,162,76,0.1)', tag: 'Outbound',
+  },
+  {
+    id: 'promotion', title: 'Plan Promotion', subtitle: 'AI sales agent promotes upgrade plans to eligible customers.',
+    icon: Sparkles, color: '#9360F7', colorBg: 'rgba(147,96,247,0.1)', tag: 'Outbound',
+  },
+  {
+    id: 'inbound', title: 'Customer Support', subtitle: 'Intelligent inbound IVR for issue resolution and complaint logging.',
+    icon: Headphones, color: '#2ABBA7', colorBg: 'rgba(42,187,167,0.1)', tag: 'Inbound',
+  },
 ]
 
 const DUMMY_CONTACTS = [
@@ -30,17 +43,109 @@ const DUMMY_CONTACTS = [
   { id: 18, name: 'Suresh Rao', 'mobile-number': '9611223344', feedback: 'Renewal reminder sent via SMS received.' },
   { id: 19, name: 'Meera Iyer', 'mobile-number': '9500112233', feedback: 'Customer support representative resolved ticket quickly.' },
   { id: 20, name: 'Sandeep Bhatia', 'mobile-number': '9888776655', feedback: 'Outstanding stability during remote working hours.' },
-  { id: 21, name: 'Arjun Kapoor', 'mobile-number': '9789012345', feedback: 'Inquired about fiber speed test inconsistency.' },
-  { id: 22, name: 'Riya Sen', 'mobile-number': '9678901234', feedback: 'Wants to pause subscription during vacations.' },
-  { id: 23, name: 'Tarun Gill', 'mobile-number': '9567890123', feedback: 'ONT device blinking red LED indicator.' },
-  { id: 24, name: 'Ishita Das', 'mobile-number': '9456789012', feedback: 'Requested dual-band Wi-Fi 6 router upgrade.' },
-  { id: 25, name: 'Gaurav Sethi', 'mobile-number': '9345678901', feedback: 'Payment received acknowledgement pending.' },
-  { id: 26, name: 'Divya Pillai', 'mobile-number': '9234567890', feedback: 'High satisfaction with customer executive call.' },
-  { id: 27, name: 'Kunal Bansal', 'mobile-number': '9123450987', feedback: 'Required invoice copy for company tax filing.' },
-  { id: 28, name: 'Simran Kaur', 'mobile-number': '9012345678', feedback: 'Speed test showing 200Mbps on 300Mbps plan.' },
-  { id: 29, name: 'Varun Mehra', 'mobile-number': '9987654321', feedback: 'Port forwarding configuration query.' },
-  { id: 30, name: 'Aarti Deshmukh', 'mobile-number': '9876501234', feedback: 'Excellent support during fiber cable cut incident.' }
 ]
+
+// ── Meta-style product card ───────────────────────────────────────────────────
+function ProductCard({ mod, onNavigate }) {
+  const Icon = mod.icon
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={() => onNavigate(mod.id)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: 'var(--cg-card-bg)',
+        border: `1px solid ${hovered ? mod.color + '55' : 'var(--cg-card-border)'}`,
+        borderRadius: '12px',
+        padding: '24px',
+        cursor: 'pointer',
+        textAlign: 'left',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        boxShadow: hovered
+          ? `0 12px 28px rgba(0,0,0,0.25), 0 0 0 1px ${mod.color}33`
+          : '0 1px 2px rgba(0,0,0,0.2)',
+        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+        transition: 'all 0.2s cubic-bezier(0.14, 1, 0.34, 1)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Top row: icon + tag */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        {/* Meta-style icon badge */}
+        <div style={{
+          width: '40px', height: '40px', borderRadius: '10px',
+          background: mod.colorBg,
+          border: `1px solid ${mod.color}30`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+          transition: 'transform 0.2s ease',
+          transform: hovered ? 'scale(1.08)' : 'scale(1)',
+        }}>
+          <Icon size={18} style={{ color: mod.color }} />
+        </div>
+
+        {/* Tag chip */}
+        <span style={{
+          fontSize: '10px', fontWeight: 600, fontFamily: 'Inter, sans-serif',
+          letterSpacing: '0.06em', textTransform: 'uppercase',
+          color: mod.color,
+          background: mod.colorBg,
+          border: `1px solid ${mod.color}30`,
+          borderRadius: '6px',
+          padding: '3px 8px',
+        }}>
+          {mod.tag}
+        </span>
+      </div>
+
+      {/* Title */}
+      <div>
+        <h2 style={{
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '16px',
+          fontWeight: 700,
+          letterSpacing: '-0.02em',
+          color: 'var(--text-primary)',
+          marginBottom: '6px',
+          lineHeight: 1.3,
+        }}>
+          {mod.title}
+        </h2>
+        <p style={{
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '13px',
+          color: 'var(--text-secondary)',
+          lineHeight: 1.55,
+          margin: 0,
+        }}>
+          {mod.subtitle}
+        </p>
+      </div>
+
+      {/* Footer CTA — Meta "Get started →" style */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '4px',
+        marginTop: 'auto',
+        color: hovered ? mod.color : 'var(--text-muted)',
+        transition: 'color 0.15s ease',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '12px',
+        fontWeight: 500,
+      }}>
+        <span>Get started</span>
+        <ArrowRight size={13} style={{
+          transform: hovered ? 'translateX(3px)' : 'translateX(0)',
+          transition: 'transform 0.15s ease',
+        }} />
+      </div>
+    </button>
+  )
+}
 
 export default function Home({ onNavigate }) {
   const [contacts, setContacts] = useState(DUMMY_CONTACTS)
@@ -50,179 +155,238 @@ export default function Home({ onNavigate }) {
     fetch(getApiUrl('/api/customers'))
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setContacts(data)
-        }
+        if (Array.isArray(data) && data.length > 0) setContacts(data)
       })
       .catch(() => {})
   }, [])
 
-  const filteredContacts = contacts.filter(c => 
-    c.name?.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredContacts = contacts.filter(c =>
+    c.name?.toLowerCase().includes(search.toLowerCase()) ||
     (c['mobile-number'] || c.phone || '').includes(search)
   )
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div style={{ maxWidth: '960px', margin: '0 auto' }}>
 
-      {/* Header */}
-      <div className="pb-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <h1
-          style={{
-            fontFamily: 'Manrope, sans-serif',
-            color: 'var(--text-primary)',
-            fontSize: 'clamp(28px, 5vw, 36px)',
-            fontWeight: 900,
-            letterSpacing: '-0.03em'
-          }}
-        >
-          Command Center
+      {/* ── Page Header — Meta AI style breadcrumb + title ─────────── */}
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '6px',
+          marginBottom: '12px',
+          fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'Inter, sans-serif',
+        }}>
+          <span>BCT Fibernet</span>
+          <span>/</span>
+          <span style={{ color: 'var(--text-secondary)' }}>AI Platform</span>
+        </div>
+        <h1 style={{
+          fontFamily: 'Inter, sans-serif',
+          fontSize: 'clamp(26px, 4vw, 34px)',
+          fontWeight: 800,
+          letterSpacing: '-0.03em',
+          color: 'var(--text-primary)',
+          lineHeight: 1.2,
+          marginBottom: '8px',
+        }}>
+          Products &amp; Solutions
         </h1>
+        <p style={{
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '14px',
+          color: 'var(--text-secondary)',
+          lineHeight: 1.6,
+        }}>
+          Build intelligent calling workflows with BCT AI. Access feedback collection, sales automation, and customer support tools.
+        </p>
       </div>
 
-      {/* Module Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {modules.map((mod) => {
-          const Icon = mod.icon
-          return (
-            <button
-              key={mod.id}
-              onClick={() => onNavigate(mod.id)}
-              className="cg-card-hover group text-left w-full cursor-pointer flex items-center justify-between p-6"
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className="rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-110"
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    minWidth: '44px',
-                    background: 'var(--accent-dim)',
-                    border: '1px solid var(--accent-border)'
-                  }}
-                >
-                  <Icon size={20} style={{ color: 'var(--accent)' }} />
-                </div>
-
-                <h2
-                  className="font-bold transition-colors group-hover:text-[var(--accent)]"
-                  style={{
-                    color: 'var(--text-primary)',
-                    fontSize: '17px',
-                    fontWeight: 700,
-                    letterSpacing: '-0.01em'
-                  }}
-                >
-                  {mod.title}
-                </h2>
-              </div>
-
-              <div
-                className="rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 group-hover:bg-[var(--accent)] group-hover:border-[var(--accent)]"
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  minWidth: '32px',
-                  border: '1px solid var(--border-subtle)',
-                  background: 'transparent'
-                }}
-              >
-                <ArrowUpRight
-                  size={15}
-                  style={{ color: 'var(--text-muted)' }}
-                  className="group-hover:text-white transition-colors"
-                />
-              </div>
-            </button>
-          )
-        })}
+      {/* ── Section label — Meta style ─────────────────────────────── */}
+      <div style={{
+        fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em',
+        textTransform: 'uppercase', color: 'var(--text-muted)',
+        fontFamily: 'Inter, sans-serif', marginBottom: '16px',
+      }}>
+        AI Modules
       </div>
 
-      {/* Contacts List Below Cards */}
-      <div className="cg-card flex flex-col overflow-hidden space-y-0 mt-6">
-        
-        {/* Contacts Header & Search Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+      {/* ── Product Cards Grid ─────────────────────────────────────── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+        gap: '16px',
+        marginBottom: '40px',
+      }}>
+        {modules.map(mod => (
+          <ProductCard key={mod.id} mod={mod} onNavigate={onNavigate} />
+        ))}
+      </div>
+
+      {/* ── Customer Directory Card ───────────────────────────────── */}
+      <div style={{
+        background: 'var(--cg-card-bg)',
+        border: '1px solid var(--cg-card-border)',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+      }}>
+
+        {/* Card header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '18px 24px',
+          borderBottom: '1px solid var(--border-subtle)',
+          gap: '16px',
+          flexWrap: 'wrap',
+        }}>
           <div>
-            <p className="forbes-label-red mb-0.5">CUSTOMER DIRECTORY</p>
-            <h3 style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--text-primary)', fontWeight: 800, fontSize: '18px' }}>
-              Contacts List <span className="font-mono text-xs text-muted ml-2 font-normal">({filteredContacts.length})</span>
+            <div style={{
+              fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em',
+              textTransform: 'uppercase', color: 'var(--accent-light)',
+              fontFamily: 'Inter, sans-serif', marginBottom: '4px',
+            }}>
+              Customer Directory
+            </div>
+            <h3 style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 700, fontSize: '17px',
+              letterSpacing: '-0.02em', color: 'var(--text-primary)', margin: 0,
+            }}>
+              Contacts List
+              <span style={{
+                fontFamily: 'ui-monospace, monospace',
+                fontSize: '12px', fontWeight: 400,
+                color: 'var(--text-muted)', marginLeft: '8px',
+              }}>
+                ({filteredContacts.length})
+              </span>
             </h3>
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+
+          {/* Search */}
+          <div style={{ position: 'relative', width: '220px', minWidth: '160px' }}>
+            <Search size={13} style={{
+              position: 'absolute', left: '10px', top: '50%',
+              transform: 'translateY(-50%)', color: 'var(--text-muted)',
+              pointerEvents: 'none',
+            }} />
             <input
               type="text"
               placeholder="Search contacts..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="cg-input w-full pl-9 pr-3 py-1.5 text-xs font-mono"
+              className="cg-input"
+              style={{ paddingLeft: '30px', paddingTop: '8px', paddingBottom: '8px', fontSize: '12px' }}
             />
           </div>
         </div>
 
-        {/* Contacts Table Header */}
-        <div className="grid grid-cols-12 px-5 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'var(--row-hover)', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
-          <div className="col-span-5 sm:col-span-4">Contact</div>
-          <div className="col-span-4 sm:col-span-3 font-mono">Phone</div>
-          <div className="hidden sm:block sm:col-span-3">Latest Note</div>
-          <div className="col-span-3 sm:col-span-2 text-right">Action</div>
+        {/* Table header */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '3fr 2fr 4fr 2fr',
+          padding: '10px 24px',
+          fontSize: '10px', fontWeight: 700,
+          textTransform: 'uppercase', letterSpacing: '0.08em',
+          color: 'var(--text-muted)', fontFamily: 'Inter, sans-serif',
+          background: 'var(--row-hover)',
+          borderBottom: '1px solid var(--border-subtle)',
+        }}>
+          <div>Contact</div>
+          <div>Phone</div>
+          <div className="hidden sm:block">Latest Note</div>
+          <div style={{ textAlign: 'right' }}>Action</div>
         </div>
 
-        {/* Contacts List Rows */}
-        <div className="divide-y divide-[var(--border-subtle)] max-h-[500px] overflow-y-auto custom-scrollbar">
+        {/* Rows */}
+        <div style={{ maxHeight: '480px', overflowY: 'auto' }} className="custom-scrollbar">
           {filteredContacts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-xs" style={{ color: 'var(--text-muted)' }}>
-              <UserCircle2 size={32} className="mb-2 opacity-40" />
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', padding: '40px 0',
+              color: 'var(--text-muted)', fontFamily: 'Inter, sans-serif', fontSize: '13px',
+            }}>
+              <UserCircle2 size={28} style={{ opacity: 0.4, marginBottom: '8px' }} />
               No contacts found
             </div>
           ) : (
-            filteredContacts.map(c => {
+            filteredContacts.map((c, idx) => {
               const phoneNum = c['mobile-number'] || c.phone || 'N/A'
+              const initial = c.name?.[0]?.toUpperCase() || '?'
+              // Rotating avatar colors like Meta's avatar system
+              const avatarColors = ['#0064E0', '#9360F7', '#2ABBA7', '#31A24C', '#FB724B', '#F7B928']
+              const avatarColor = avatarColors[idx % avatarColors.length]
               return (
-                <div key={c.id} className="grid grid-cols-12 px-5 py-3.5 items-center hover:bg-[var(--row-hover)] transition-colors">
-                  
-                  {/* Name & Avatar */}
-                  <div className="col-span-5 sm:col-span-4 flex items-center gap-3 min-w-0 pr-2">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white uppercase"
-                      style={{ background: 'var(--accent)', boxShadow: '0 2px 8px rgba(232,96,46,0.25)' }}
-                    >
-                      {c.name?.[0] || '?'}
+                <div
+                  key={c.id}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '3fr 2fr 4fr 2fr',
+                    padding: '12px 24px',
+                    alignItems: 'center',
+                    borderBottom: '1px solid var(--border-subtle)',
+                    transition: 'background 0.12s ease',
+                    cursor: 'default',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--row-hover)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  {/* Name + Avatar */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, paddingRight: '12px' }}>
+                    <div style={{
+                      width: '30px', height: '30px', borderRadius: '50%',
+                      background: avatarColor,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0, fontSize: '11px', fontWeight: 700,
+                      color: '#fff', fontFamily: 'Inter, sans-serif',
+                    }}>
+                      {initial}
                     </div>
-                    <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                    <span style={{
+                      fontFamily: 'Inter, sans-serif', fontSize: '13px',
+                      fontWeight: 500, color: 'var(--text-primary)',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
                       {c.name}
                     </span>
                   </div>
 
                   {/* Phone */}
-                  <div className="col-span-4 sm:col-span-3 font-mono text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
+                  <div style={{
+                    fontFamily: 'ui-monospace, monospace', fontSize: '12px',
+                    color: 'var(--text-secondary)',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
                     {phoneNum}
                   </div>
 
-                  {/* Feedback Note */}
-                  <div className="hidden sm:block sm:col-span-3 text-xs truncate pr-4" style={{ color: 'var(--text-muted)' }}>
+                  {/* Note */}
+                  <div style={{
+                    fontFamily: 'Inter, sans-serif', fontSize: '12px',
+                    color: 'var(--text-muted)',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    paddingRight: '16px',
+                  }} className="hidden sm:block">
                     {c.feedback || 'No feedback yet.'}
                   </div>
 
-                  {/* Action Button */}
-                  <div className="col-span-3 sm:col-span-2 text-right">
+                  {/* Action */}
+                  <div style={{ textAlign: 'right' }}>
                     <button
                       onClick={() => onNavigate('feedback')}
-                      className="btn-primary inline-flex items-center gap-1 text-[11px] py-1 px-3 shrink-0"
+                      className="btn-primary"
+                      style={{ padding: '5px 14px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                     >
                       <Phone size={11} /> Call
                     </button>
                   </div>
-
                 </div>
               )
             })
           )}
         </div>
-
       </div>
-
     </div>
   )
 }

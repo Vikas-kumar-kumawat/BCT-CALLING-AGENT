@@ -1,13 +1,16 @@
-require('dotenv').config()
+const path = require('path')
+require('dotenv').config({ path: path.join(__dirname, '.env') })
 
-const REQUIRED_ENV = ['GROQ_API_KEY', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY']
+const hasLlmKey = !!process.env.LLM_API_KEY
+const REQUIRED_ENV = ['SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY']
 const missing = REQUIRED_ENV.filter(k => !process.env[k])
+if (!hasLlmKey) missing.push('LLM_API_KEY')
+
 if (missing.length > 0) console.error('[ENV ERROR] Missing required:', missing.join(', '))
 else console.log('[ENV] Required vars loaded ✓')
 
 const express = require('express')
 const cors = require('cors')
-const path = require('path')
 const fs = require('fs')
 
 const app = express()
